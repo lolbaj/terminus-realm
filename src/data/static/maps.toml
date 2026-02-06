@@ -1,75 +1,696 @@
+# Static Map Configurations
+# Layouts use multi-line strings for easy editing.
+
 [[maps]]
 x = 0
 y = 0
-layout = [ "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTT###+#######+###TTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTT#.............#TTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTT#.............#TTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTT#.............#TTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTT#.............#TTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTT#.............#TTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTT#.............#TTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTT#.............#TTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTT#######+#######TTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTT...........TTTTTTTTTTTTTTTTTTTT", "TT#.#.#.#.#.#.#TTT.............TTT#.#.#.#.#.#.#TTT", "TT.............T.................T.............TTT", "TT.............T.................T.............TTT", "TT.............T.................T.............TTT", "TT.............T.................T.............TTT", "TT.............T...~~~~~~~~~~~...T.............TTT", "TT#.#.#+#.#.#.#T...~.........~...T#.#.#+#.#.#.#TTT", "TTTTTT.T.TTTTTTT...~.........~...TTTTTT.T.TTTTTTTT", "TT.............T...~.........~...T.............TTT", "TT.............T...~.........~...T.............TTT", "TT.............T...~.........~...T.............TTT", "TT.............T...~.........~...T.............TTT", "TT.............T...~~~~~~~~~~~...T.............TTT", "TT#.#.#+#.#.#.#T.................T#.#.#+#.#.#.#TTT", "TTTTTT.T.TTTTTTT........@........TTTTTT.T.TTTTTTTT", "TT.............T.................T.............TTT", "TT.............T.................T.............TTT", "TT.............T.................T.............TTT", "TT#.#.#.#.#.#.#T.................T#.#.#+#.#.#.#TTT", "TTTTTTTTTTTTTTTT.................TTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT.................TTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT.................TTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT.................TTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT.................TTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT.................TTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT.................TTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT##.....###.....##TTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT##.....###.....##TTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT..................TTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT..................TTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT,................,TTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT,,..............,,TTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT,,,............,,,TTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT,,,,..........,,,,TTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT,,,,,........,,,,,TTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT,,,,,,......,,,,,,TTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT,,,,,,,....,,,,,,,TTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTT....TTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTT....TTTTTTTTTTTTTTTTTTTTTTT",]
+layout = """
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTT###+#######+###TTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTT#.............#TTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTT#.............#TTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTT#.............#TTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTT#.............#TTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTT#.............#TTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTT#.............#TTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTT#.............#TTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTT#######+#######TTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTT...........TTTTTTTTTTTTTTTTTTTT
+TT#.#.#.#.#.#.#TTT.............TTT#.#.#.#.#.#.#TTT
+TT.............T.................T.............TTT
+TT.............T.................T.............TTT
+TT.............T.................T.............TTT
+TT.............T.................T.............TTT
+TT.............T...~~~~~~~~~~~...T.............TTT
+TT#.#.#+#.#.#.#T...~.........~...T#.#.#+#.#.#.#TTT
+TTTTTT.T.TTTTTTT...~.........~...TTTTTT.T.TTTTTTTT
+TT.............T...~.........~...T.............TTT
+TT.............T...~.........~...T.............TTT
+TT.............T...~.........~...T.............TTT
+TT.............T...~.........~...T.............TTT
+TT.............T...~~~~~~~~~~~...T.............TTT
+TT#.#.#+#.#.#.#T.................T#.#.#+#.#.#.#TTT
+TTTTTT.T.TTTTTTT........@........TTTTTT.T.TTTTTTTT
+TT.............T.................T.............TTT
+TT.............T.................T.............TTT
+TT.............T.................T.............TTT
+TT#.#.#.#.#.#.#T.................T#.#.#+#.#.#.#TTT
+TTTTTTTTTTTTTTTT.................TTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT.................TTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT.................TTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT.................TTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT.................TTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT.................TTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT.................TTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT##.....###.....##TTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT##.....###.....##TTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT..................TTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT..................TTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT,................,TTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT,,..............,,TTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT,,,............,,,TTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT,,,,..........,,,,TTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT,,,,,........,,,,,TTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT,,,,,,......,,,,,,TTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT,,,,,,,....,,,,,,,TTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTT....TTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTT....TTTTTTTTTTTTTTTTTTTTTTT
+"""
 
 [[maps]]
 x = 0
 y = 1
-layout = [ "TTTTTTTTTTTTTTTTTTTTTTT....TTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTT....TTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT,,,,,,,....,,,,,,,TTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTT,,,,,,,,....,,,,,,,,TTTTTTTTTTTTTTT", "TTTTTTTTTTTTTT,,,,,,,,,....,,,,,,,,,TTTTTTTTTTTTTT", "TTTTTTTTTTTTT,,,,,,,,,,....,,,,,,,,,,TTTTTTTTTTTTT", "TTTTTTTTTTTT,,,,,,,,,,,....,,,,,,,,,,,TTTTTTTTTTTT", "TTTTTTTTTTT,,,,,,,,,,,,....,,,,,,,,,,,,TTTTTTTTTTT", "TTTTTTTTTT,,,,,,,,,,,,,....,,,,,,,,,,,,,TTTTTTTTTT", "TTTTTTTTT,,,,,,,,,,,,,,....,,,,,,,,,,,,,,TTTTTTTTT", "TTTTTTTT,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,TTTTTTTT", "TTTTTTT,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,TTTTTTT", "TTTTTT,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,TTTTTT", "TTTTT,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,TTTTT", "TTTT,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,TTTT", "TTT,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,TTT", "TT,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,TT", "T,,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,,T", ",,,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,,,", ",,,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,,,", ",,,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,,,", ",,,,,,,,,,~~~,,,,,,,,,,....,,,,,,,,,,,~~~,,,,,,,,,", ",,,,,,,,,~~~~~,,,,,,,,,....,,,,,,,,,,~~~~~,,,,,,,,", ",,,,,,,,~~~~~~~,,,,,,,,....,,,,,,,,,~~~~~~~,,,,,,,", ",,,,,,,,~~~~~~~,,,,,,,,....,,,,,,,,,~~~~~~~,,,,,,,", ",,,,,,,,,~~~~~,,,,,,,,,....,,,,,,,,,,~~~~~,,,,,,,,", ",,,,,,,,,,~~~,,,,,,,,,,....,,,,,,,,,,,~~~,,,,,,,,,", ",,,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,,,", ",,,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,,,", ",,,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,,,", "T,,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,,T", "TT,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,TT", "TTT,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,TTT", "TTTT,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,TTTT", "TTTTT,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,TTTTT", "TTTTTT,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,TTTTTT", "TTTTTTT,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,TTTTTTT", "TTTTTTTT,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,TTTTTTTT", "TTTTTTTTT,,,,,,,,,,,,,,....,,,,,,,,,,,,,,TTTTTTTTT", "TTTTTTTTTT,,,,,,,,,,,,,....,,,,,,,,,,,,,TTTTTTTTTT", "TTTTTTTTTTT,,,,,,,,,,,,....,,,,,,,,,,,,TTTTTTTTTTT", "TTTTTTTTTTTT,,,,,,,,,,,....,,,,,,,,,,,TTTTTTTTTTTT", "TTTTTTTTTTTTT,,,,,,,,,,....,,,,,,,,,,TTTTTTTTTTTTT", "TTTTTTTTTTTTTT,,,,,,,,,....,,,,,,,,,TTTTTTTTTTTTTT", "TTTTTTTTTTTTTTT,,,,,,,,....,,,,,,,,TTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT,,,,,,,....,,,,,,,TTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTT,,,,,,....,,,,,,TTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTT,,,,,....,,,,,TTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTT,,,,....,,,,TTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTT,,,....,,,TTTTTTTTTTTTTTTTTTTT",]
+layout = """
+TTTTTTTTTTTTTTTTTTTTTTT....TTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTT....TTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT,,,,,,,....,,,,,,,TTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTT,,,,,,,,....,,,,,,,,TTTTTTTTTTTTTTT
+TTTTTTTTTTTTTT,,,,,,,,,....,,,,,,,,,TTTTTTTTTTTTTT
+TTTTTTTTTTTTT,,,,,,,,,,....,,,,,,,,,,TTTTTTTTTTTTT
+TTTTTTTTTTTT,,,,,,,,,,,....,,,,,,,,,,,TTTTTTTTTTTT
+TTTTTTTTTTT,,,,,,,,,,,,....,,,,,,,,,,,,TTTTTTTTTTT
+TTTTTTTTTT,,,,,,,,,,,,,....,,,,,,,,,,,,,TTTTTTTTTT
+TTTTTTTTT,,,,,,,,,,,,,,....,,,,,,,,,,,,,,TTTTTTTTT
+TTTTTTTT,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,TTTTTTTT
+TTTTTTT,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,TTTTTTT
+TTTTTT,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,TTTTTT
+TTTTT,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,TTTTT
+TTTT,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,TTTT
+TTT,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,TTT
+TT,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,TT
+T,,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,,T
+,,,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,~~~,,,,,,,,,,....,,,,,,,,,,,~~~,,,,,,,,,
+,,,,,,,,,~~~~~,,,,,,,,,....,,,,,,,,,,~~~~~,,,,,,,,
+,,,,,,,,~~~~~~~,,,,,,,,....,,,,,,,,,~~~~~~~,,,,,,,
+,,,,,,,,~~~~~~~,,,,,,,,....,,,,,,,,,~~~~~~~,,,,,,,
+,,,,,,,,,~~~~~,,,,,,,,,....,,,,,,,,,,~~~~~,,,,,,,,
+,,,,,,,,,,~~~,,,,,,,,,,....,,,,,,,,,,,~~~,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,,,
+T,,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,,T
+TT,,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,,TT
+TTT,,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,,TTT
+TTTT,,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,,TTTT
+TTTTT,,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,,TTTTT
+TTTTTT,,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,,TTTTTT
+TTTTTTT,,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,,TTTTTTT
+TTTTTTTT,,,,,,,,,,,,,,,....,,,,,,,,,,,,,,,TTTTTTTT
+TTTTTTTTT,,,,,,,,,,,,,,....,,,,,,,,,,,,,,TTTTTTTTT
+TTTTTTTTTT,,,,,,,,,,,,,....,,,,,,,,,,,,,TTTTTTTTTT
+TTTTTTTTTTT,,,,,,,,,,,,....,,,,,,,,,,,,TTTTTTTTTTT
+TTTTTTTTTTTT,,,,,,,,,,,....,,,,,,,,,,,TTTTTTTTTTTT
+TTTTTTTTTTTTT,,,,,,,,,,....,,,,,,,,,,TTTTTTTTTTTTT
+TTTTTTTTTTTTTT,,,,,,,,,....,,,,,,,,,TTTTTTTTTTTTTT
+TTTTTTTTTTTTTTT,,,,,,,,....,,,,,,,,TTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT,,,,,,,....,,,,,,,TTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTT,,,,,,....,,,,,,TTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTT,,,,,....,,,,,TTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTT,,,,....,,,,TTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTT,,,....,,,TTTTTTTTTTTTTTTTTTTT
+"""
 
 [[maps]]
 x = 1
 y = 0
-layout = [ "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTT....TTTTTTTTTTTTTTTTTTTTT", "TTT......................S..STTTTTTTTTTTTTTTTTTTTT", "TTT......................SSSSTTTTTTTTTTTTTTTTTTTTT", "TTT......................SSSSTTTTTTTTTTTTTTTTTTTTT", "TTT.........#...#########SSSSTTTTTTTTTTTTTTTTTTTTT", "TTT.............#.......#...STTTTTTTTTTTTTTTTTTTTT", "TTT.............#.......#....TTTTTTTTTTTTTTTTTTTTT", "TTT.............#.......#....TTTTTTTTTTTTTTTTTTTTT", "TTTTTTTT.TTTTTTT####+####....TTTTTTTTTTTTTTTTTTTTT", "TTT..........................TTTTTTTTTTTTTTTTTTTTT", "TTT..........................TTTTTTTTTTTTTTTTTTTTT", "TTT...............=..........TTTTTTTTTTTTTTTTTTTTT", "TTT..........................TTTTTTTTTTTTTTTTTTTTT", "TTT..........................TTTTTTTTTTTTTTTTTTTTT", "TTT.....#########............TTTTTTTTTTTTTTTTTTTTT", "TTTTTTTT#.......#............TTTTTTTTTTTTTTTTTTTTT", "TTT.....#.......#............TTTTTTTTTTTTTTTTTTTTT", "TTT.....#.......#............TTTTTTTTTTTTTTTTTTTTT", "TTT.....####+####............TTTTTTTTTTTTTTTTTTTTT", "TTT..........................TTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTT.........................TTTTTTTTT", "TTTTTTTTTTTTTTTT.........................TTTTTTTTT", "TTTTTTTTTTTTTTTT.........................TTTTTTTTT", "TTTTTTTTTTTTTTTT.........................TTTTTTTTT", "TTTTTTTTTTTTTTTT.........................TTTTTTTTT", "TTTTTTTTTTTTTTTT.........................TTTTTTTTT", "TTTTTTTTTTTTTTTT.........................TTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",]
+layout = """
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTT....TTTTTTTTTTTTTTTTTTTTT
+TTT......................S..STTTTTTTTTTTTTTTTTTTTT
+TTT......................SSSSTTTTTTTTTTTTTTTTTTTTT
+TTT......................SSSSTTTTTTTTTTTTTTTTTTTTT
+TTT.........#...#########SSSSTTTTTTTTTTTTTTTTTTTTT
+TTT.............#.......#...STTTTTTTTTTTTTTTTTTTTT
+TTT.............#.......#....TTTTTTTTTTTTTTTTTTTTT
+TTT.............#.......#....TTTTTTTTTTTTTTTTTTTTT
+TTTTTTTT.TTTTTTT####+####....TTTTTTTTTTTTTTTTTTTTT
+TTT..........................TTTTTTTTTTTTTTTTTTTTT
+TTT..........................TTTTTTTTTTTTTTTTTTTTT
+TTT...............=..........TTTTTTTTTTTTTTTTTTTTT
+TTT..........................TTTTTTTTTTTTTTTTTTTTT
+TTT..........................TTTTTTTTTTTTTTTTTTTTT
+TTT.....#########............TTTTTTTTTTTTTTTTTTTTT
+TTTTTTTT#.......#............TTTTTTTTTTTTTTTTTTTTT
+TTT.....#.......#............TTTTTTTTTTTTTTTTTTTTT
+TTT.....#.......#............TTTTTTTTTTTTTTTTTTTTT
+TTT.....####+####............TTTTTTTTTTTTTTTTTTTTT
+TTT..........................TTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTT.........................TTTTTTTTT
+TTTTTTTTTTTTTTTT.........................TTTTTTTTT
+TTTTTTTTTTTTTTTT.........................TTTTTTTTT
+TTTTTTTTTTTTTTTT.........................TTTTTTTTT
+TTTTTTTTTTTTTTTT.........................TTTTTTTTT
+TTTTTTTTTTTTTTTT.........................TTTTTTTTT
+TTTTTTTTTTTTTTTT.........................TTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+"""
 
 [[maps]]
 x = 0
 y = -1
-layout = [ "########################################", "#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#", "#,,,TTT,,,,,,,,,,,,,,,,,,,,,,,,,TTT,,,#", "#,,,,,,,PPPPPPPPPPPPPPPPPPPP,,,,,,,,,#", "#,,,,,,,P..................P,,,,,,,,,#", "#,,,,,,,P..######....######..P,,,,,,,#", "#TTT,,,,P..#....#....#....#..P,,,,TTT#", "#,,,,,,,P..#..<.+....+....#..P,,,,,,,#", "#,,,,,,,P..#....#....#....#..P,,,,,,,#", "#,,,,,,,P..######....######..P,,,,,,,#", "#,,,,,,,P..................P,,,,,,,,,#", "#,,,,,,,P...######++######...P,,,,,,,#", "#,,,,,,,P...#............#...P,,,,,,,#", "#TTT,,,,P...#............#...P,,,,TTT#", "#,,,,,,,P...#............#...P,,,,,,,#", "#,,,,,,,P...#....>.......#...P,,,,,,,#", "#,,,,,,,P...#............#...P,,,,,,,#", "#,,,,,,,P...##############...P,,,,,,,#", "#,,,,,,,P..................P,,,,,,,,,#", "#,,,,,,,PPPPPPPPPPPPPPPPPPPP,,,,,,,,,#", "#,,,TTT,,,,,,,,,,,,,,,,,,,,,,,,TTT,,,#", "#~~~~,,,,,,,,,,,,,,,,,,,,,,,,,,,,,~~~~#", "#~~~~,,,,,,,,,,,,,,,,,,,,,,,,,,,,,~~~~#", "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#", "########################################",]
+layout = """
+########################################
+#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#
+#,,,TTT,,,,,,,,,,,,,,,,,,,,,,,,,TTT,,,#
+#,,,,,,,PPPPPPPPPPPPPPPPPPPP,,,,,,,,,#
+#,,,,,,,P..................P,,,,,,,,,#
+#,,,,,,,P..######....######..P,,,,,,,#
+#TTT,,,,P..#....#....#....#..P,,,,TTT#
+#,,,,,,,P..#..<.+....+....#..P,,,,,,,#
+#,,,,,,,P..#....#....#....#..P,,,,,,,#
+#,,,,,,,P..######....######..P,,,,,,,#
+#,,,,,,,P..................P,,,,,,,,,#
+#,,,,,,,P...######++######...P,,,,,,,#
+#,,,,,,,P...#............#...P,,,,,,,#
+#TTT,,,,P...#............#...P,,,,TTT#
+#,,,,,,,P...#............#...P,,,,,,,#
+#,,,,,,,P...#....>.......#...P,,,,,,,#
+#,,,,,,,P...#............#...P,,,,,,,#
+#,,,,,,,P...##############...P,,,,,,,#
+#,,,,,,,P..................P,,,,,,,,,#
+#,,,,,,,PPPPPPPPPPPPPPPPPPPP,,,,,,,,,#
+#,,,TTT,,,,,,,,,,,,,,,,,,,,,,,,TTT,,,#
+#~~~~,,,,,,,,,,,,,,,,,,,,,,,,,,,,,~~~~#
+#~~~~,,,,,,,,,,,,,,,,,,,,,,,,,,,,,~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+########################################
+"""
 
 [[maps]]
 x = -1
 y = 0
-layout = [ "########################################", "#,,,,TTT,,,,,,,,,,,TTT,,,,,,,,,,,TTT,,#", "#,,,,,,,,,TTT,,,,,,,,,,,,,TTT,,,,,,,,,#", "#TTT,,,,,,,,,,,,TTT,,,,,,,,,,,,,,,,TTT#", "#,,,,,,,TTT,,,,,,,,,,,TTT,,,,,,,,,,,,,#", "#,,,TTT,,,,,,,,,TTT,,,,,,,,,,,TTT,,,,,#", "#,,,,,,,,,,TTT,,,,,,,,,,,TTT,,,,,,,,,,#", "#,TTT,,,,,,,,,,,,,,,TTT,,,,,,,,,,,TTT,#", "#,,,,,,,,TTT,,,,,,,,,,,,,,,,,TTT,,,,,,#", "#,,,,,,,,,,,,,PPPPPPPP,,,,,,,,,,,,,,,,#", "#TTT,,,,,,,,,,P......P,,,,,,,,,,,,,,,,#", "#,,,,,,TTT,,,,P..##..P,,,,TTT,,,,,TTT,#", "#,,,,,,,,,,,,,P..#...P,,,,,,,,,,,,,,,,#", "#,,,TTT,,,,,,,P..<...P,,,,,,,,,TTT,,,,#", "#,,,,,,,,,,TTT.......P,,,,,,,,,,,,,,,,#", "#,,,,,,,,,,,,,P..##..PPPPP,,,,,,,,,,,,#", "#TTT,,,,,,,,,,.......P...P,,,TTT,,,,,,#", "#,,,,,,,TTT,,,P..##..P...P,,,,,,,,TTT,#", "#,,,,,,,,,,,,,.......+...P,,,,,,,,,,,,#", "#,,,TTT,,,,,,,PPPPPPPPPPPPPPP,,,,,,,,,#", "#,,,,,,,,,TTT,,,,,,,,,,,,,,,,TTT,,,,,,#", "#,,,,,,,,,,,,,,,,TTT,,,,,,,,,,,,,,,TTT#", "#,TTT,,,,,,,TTT,,,,,,,,,,TTT,,,,,,,,,,#", "########################################",]
+layout = """
+########################################
+#,,,,TTT,,,,,,,,,,,TTT,,,,,,,,,,,TTT,,#
+#,,,,,,,,,TTT,,,,,,,,,,,,,TTT,,,,,,,,,#
+#TTT,,,,,,,,,,,,TTT,,,,,,,,,,,,,,,,TTT#
+#,,,,,,,TTT,,,,,,,,,,,TTT,,,,,,,,,,,,,#
+#,,,TTT,,,,,,,,,TTT,,,,,,,,,,,TTT,,,,,#
+#,,,,,,,,,,TTT,,,,,,,,,,,TTT,,,,,,,,,,#
+#,TTT,,,,,,,,,,,,,,,TTT,,,,,,,,,,,TTT,#
+#,,,,,,,,TTT,,,,,,,,,,,,,,,,,TTT,,,,,,#
+#,,,,,,,,,,,,,PPPPPPPP,,,,,,,,,,,,,,,,#
+#TTT,,,,,,,,,,P......P,,,,,,,,,,,,,,,,#
+#,,,,,,TTT,,,,P..##..P,,,,TTT,,,,,TTT,#
+#,,,,,,,,,,,,,P..#...P,,,,,,,,,,,,,,,,#
+#,,,TTT,,,,,,,P..<...P,,,,,,,,,TTT,,,,#
+#,,,,,,,,,,TTT.......P,,,,,,,,,,,,,,,,#
+#,,,,,,,,,,,,,P..##..PPPPP,,,,,,,,,,,,#
+#TTT,,,,,,,,,,.......P...P,,,TTT,,,,,,#
+#,,,,,,,TTT,,,P..##..P...P,,,,,,,,TTT,#
+#,,,,,,,,,,,,,.......+...P,,,,,,,,,,,,#
+#,,,TTT,,,,,,,PPPPPPPPPPPPPPP,,,,,,,,,#
+#,,,,,,,,,TTT,,,,,,,,,,,,,,,,TTT,,,,,,#
+#,,,,,,,,,,,,,,,,TTT,,,,,,,,,,,,,,,TTT#
+#,TTT,,,,,,,TTT,,,,,,,,,,TTT,,,,,,,,,,#
+########################################
+"""
 
 [[maps]]
 x = -1
 y = 1
-layout = [ "########################################", "#......................................#", "#.####.......########.......####......#", "#.#..#.......#......#.......#..#......#", "#.#..+.......+......#.......+..#......#", "#.#..#.......#......#.......#..#......#", "#.####.......########.......####......#", "#......................................#", "#...........##+##..................<...#", "#...........#...#......................#", "######+######...########+###########...#", "#......................................#", "#.####...################...####.......#", "#.#..#...#.............#...#..#.......#", "#.#..#...+.............+...+..#.......#", "#.#..#...#.............#...#..#.......#", "#.####...#.............#...####.......#", "#........#.............#..............#", "#........###############..............#", "#.....................................#", "#..>..................................#", "#.....................................#", "#.....................................#", "#######################################",]
+layout = """
+########################################
+#......................................#
+#.####.......########.......####......#
+#.#..#.......#......#.......#..#......#
+#.#..+.......+......#.......+..#......#
+#.#..#.......#......#.......#..#......#
+#.####.......########.......####......#
+#......................................#
+#...........##+##..................<...#
+#...........#...#......................#
+######+######...########+###########...#
+#......................................#
+#.####...################...####.......#
+#.#..#...#.............#...#..#.......#
+#.#..#...+.............+...+..#.......#
+#.#..#...#.............#...#..#.......#
+#.####...#.............#...####.......#
+#........#.............#..............#
+#........###############..............#
+#.....................................#
+#..>..................................#
+#.....................................#
+#.....................................#
+#######################################
+"""
 
 [[maps]]
 x = 1
 y = 1
-layout = [ "########################################", "#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS#", "#SSSSSSSCSSSSSSSSSSSSSSSSSSSCSSSSSSSS#", "#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS#", "#SSSSSSSSSSS##############SSSSSSSSSSS#", "#SSSSCSSSSS##AAAAAAAAAAAA##SSSSSCSSSS#", "#SSSSSSSSS##AAAAAAAAAAAAAA##SSSSSSSSS#", "#SSSSSSSS##AAAAAA####AAAAAA##SSSSSSSS#", "#SSSSSSS##AAAAAA#....#AAAAAA##SSSSSSS#", "#SSSSSS##AAAAAA#......#AAAAAA##SSSSSS#", "#SSSSS##AAAAAA#..####..#AAAAAA##SSSSS#", "#SSSS##AAAAAA#...#..#...#AAAAAA##SSSS#", "#SSSS#AAAAAA#....+..+....#AAAAAA#SSSS#", "#SSSS#AAAAAA#....#..#....#AAAAAA#SSSS#", "#SSSS##AAAAAA#...####...#AAAAAA##SSSS#", "#SSSSS##AAAAAA#........#AAAAAA##SSSSS#", "#SSSSSS##AAAAAA#..>...#AAAAAA##SSSSSS#", "#SSSSSSS##AAAAAA####AAAAAA##SSSSSSSSS#", "#SSSSSSSS##AAAAAAAAAAAAAA##SSSSSSSSSS#", "#SSSSSSSSS##AAAAAAAAAAAA##SSSSSSSSSSS#", "#SSSSCSSSSS##############SSSSSSCSSSS#", "#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS#", "#SSSSSSSSCSSSSSSSSSSSSSSSSSSSCSSSSSS#", "########################################",]
+layout = """
+########################################
+#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS#
+#SSSSSSSCSSSSSSSSSSSSSSSSSSSCSSSSSSSS#
+#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS#
+#SSSSSSSSSSS##############SSSSSSSSSSS#
+#SSSSCSSSSS##AAAAAAAAAAAA##SSSSSCSSSS#
+#SSSSSSSSS##AAAAAAAAAAAAAA##SSSSSSSSS#
+#SSSSSSSS##AAAAAA####AAAAAA##SSSSSSSS#
+#SSSSSSS##AAAAAA#....#AAAAAA##SSSSSSS#
+#SSSSSS##AAAAAA#......#AAAAAA##SSSSSS#
+#SSSSS##AAAAAA#..####..#AAAAAA##SSSSS#
+#SSSS##AAAAAA#...#..#...#AAAAAA##SSSS#
+#SSSS#AAAAAA#....+..+....#AAAAAA#SSSS#
+#SSSS#AAAAAA#....#..#....#AAAAAA#SSSS#
+#SSSS##AAAAAA#...####...#AAAAAA##SSSS#
+#SSSSS##AAAAAA#........#AAAAAA##SSSSS#
+#SSSSSS##AAAAAA#..>...#AAAAAA##SSSSSS#
+#SSSSSSS##AAAAAA####AAAAAA##SSSSSSSSS#
+#SSSSSSSS##AAAAAAAAAAAAAA##SSSSSSSSSS#
+#SSSSSSSSS##AAAAAAAAAAAA##SSSSSSSSSSS#
+#SSSSCSSSSS##############SSSSSSCSSSS#
+#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS#
+#SSSSSSSSCSSSSSSSSSSSSSSSSSSSCSSSSSS#
+########################################
+"""
 
 [[maps]]
 x = 0
 y = -2
-layout = [ "#################################################################", "#*****************************************************************#", "#****IIIII****IIIII****IIIII****IIIII****IIIII****IIIII*****III*#", "#***IIIIIII**IIIIIII**IIIIIII**IIIIIII**IIIIIII**IIIIIII***III*#", "#**IIIII*****IIIII*****IIIII*****IIIII*****IIIII*****IIIII**III*#", "#*III*****************************************************III***#", "#*III*********************#######################*********III***#", "#*III*******************###IIIIIIIIIIIIIIIIIIIII###*******III***#", "#*III******************##IIIIIIIIIIIIIIIIIIIIIIIII##******III***#", "#*III*****************##IIII#####################IIII##****III***#", "#*III****************##IIII##...................##IIII##***III***#", "#*III***************##IIII##.....................##IIII##**III***#", "#*III**************##IIII##.....###########.......##IIII##*III***#", "#*III*************##IIII##.....##.........##.......##IIII##III***#", "#*III************##IIII##......#...........#........##IIII#III***#", "#*III***********##IIII##.......#...........#.........##III##II***#", "#*III**********##IIII##........+....<......+..........##III#II***#", "#*III**********#IIII##.........#...........#..........##III#II***#", "#*III*********##III##..........##.........##...........#III##I***#", "#*III*********#III##............###########............#III##I***#", "#*III********##III#.....................................##III#***#", "#*III********#III##.....................................#III##***#", "#*III*******##III#......................................##III#***#", "#*III*******#III##.............#########...............#IIII#***#", "#*III******##III#..............#.......#...............##III#***#", "#*III******#IIII#..............#.......#................#III##**#", "#*III*****##III##..............+...>...+................#IIII#**#", "#*III*****#IIII#...............#.......#...............##IIII#**#", "#*III****##III##...............#########...............#IIIII#**#", "#*III****#IIII#........................................##IIII#**#", "#*III***##III##........................................#IIIII#**#", "#*III***#IIII#.........................................#IIIII#**#", "#*III**##III##........................................##IIIII#**#", "#*III**#IIII##........................................#IIIIII#**#", "#*III*##IIIII#.......................................##IIIIII#**#", "#*III*#IIIII##.......................................#IIIIIII#**#", "#*III##IIIIII#......................................##IIIIIII#**#", "#*III#IIIIII##......................................#IIIIIIII#**#", "#*II##IIIIIII####################IIII###############IIIIIIIII#**#", "#*II#IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII#**#", "#*II#IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII#**#", "#*****************************************************************#", "#################################################################",]
+layout = """
+#################################################################
+#*****************************************************************#
+#****IIIII****IIIII****IIIII****IIIII****IIIII****IIIII*****III*#
+#***IIIIIII**IIIIIII**IIIIIII**IIIIIII**IIIIIII**IIIIIII***III*#
+#**IIIII*****IIIII*****IIIII*****IIIII*****IIIII*****IIIII**III*#
+#*III*****************************************************III***#
+#*III*********************#######################*********III***#
+#*III*******************###IIIIIIIIIIIIIIIIIIIII###*******III***#
+#*III******************##IIIIIIIIIIIIIIIIIIIIIIIII##******III***#
+#*III*****************##IIII#####################IIII##****III***#
+#*III****************##IIII##...................##IIII##***III***#
+#*III***************##IIII##.....................##IIII##**III***#
+#*III**************##IIII##.....###########.......##IIII##*III***#
+#*III*************##IIII##.....##.........##.......##IIII##III***#
+#*III************##IIII##......#...........#........##IIII#III***#
+#*III***********##IIII##.......#...........#.........##III##II***#
+#*III**********##IIII##........+....<......+..........##III#II***#
+#*III**********#IIII##.........#...........#..........##III#II***#
+#*III*********##III##..........##.........##...........#III##I***#
+#*III*********#III##............###########............#III##I***#
+#*III********##III#.....................................##III#***#
+#*III********#III##.....................................#III##***#
+#*III*******##III#......................................##III#***#
+#*III*******#III##.............#########...............#IIII#***#
+#*III******##III#..............#.......#...............##III#***#
+#*III******#IIII#..............#.......#................#III##**#
+#*III*****##III##..............+...>...+................#IIII#**#
+#*III*****#IIII#...............#.......#...............##IIII#**#
+#*III****##III##...............#########...............#IIIII#**#
+#*III****#IIII#........................................##IIII#**#
+#*III***##III##........................................#IIIII#**#
+#*III***#IIII#.........................................#IIIII#**#
+#*III**##III##........................................##IIIII#**#
+#*III**#IIII##........................................#IIIIII#**#
+#*III*##IIIII#.......................................##IIIIII#**#
+#*III*#IIIII##.......................................#IIIIIII#**#
+#*III##IIIIII#......................................##IIIIIII#**#
+#*III#IIIIII##......................................#IIIIIIII#**#
+#*II##IIIIIII####################IIII###############IIIIIIIII#**#
+#*II#IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII#**#
+#*II#IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII#**#
+#*****************************************************************#
+#################################################################
+"""
 
 [[maps]]
 x = 0
 y = 2
-layout = [ "######################################################################", "#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA#", "#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA#", "#AAAA=========AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=========AAAAAAA#", "#AAA===========AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA===========AAAAAA#", "#AA=============AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=============AAAAA#", "#AA==============AAAAAAAA##################AAAAAA==============AAAAA#", "#AA==============AAAAAAA#AAAAAAAAAAAAAAAAAAA#AAAAA==============AAAA#", "#AAA=============AAAAAA#AAAAAAAAAAAAAAAAAAAAA#AAAA==============AAAA#", "#AAA=============AAAAA#AAAAA##############AAAA#AAA=============AAAAA#", "#AAAA============AAAA#AAAA##............##AAAA#AA==============AAAAA#", "#AAAA============AAAA#AAA##..............##AAAA#A=============AAAAAA#", "#AAAAA===========AAA#AAA##................##AAA#==============AAAAAA#", "#AAAAA===========AAA#AA##..................##AA#A============AAAAAAA#", "#AAAAAA==========AA#AAA#....................#AAA#============AAAAAAA#", "#AAAAAA==========AA#AA##....................##AA#A==========AAAAAAAA#", "#AAAAAAA=========A#AAA#......................#AAA#==========AAAAAAAA#", "#AAAAAAA=========A#AA##....####====####......##AA#=========AAAAAAAAA#", "#AAAAAAAA========#AAA#....##..======..##......#AA#=========AAAAAAAAA#", "#AAAAAAAA========#AAA#....#....====....#......#AA#A========AAAAAAAAA#", "#AAAAAAAAA=======#AA##....#....====....#......##AA#========AAAAAAAAA#", "#AAAAAAAAA=======#AA#.....+....====....+.......#AA#=======AAAAAAAAAA#", "#AAAAAAAAAA======#AA#.....#....====....#.......#AA#=======AAAAAAAAAA#", "#AAAAAAAAAA======#AA##....#....====....#......##AA#======AAAAAAAAAAA#", "#AAAAAAAAAAA=====#AAA#....##...====...##......#AAA#======AAAAAAAAAAA#", "#AAAAAAAAAAA=====#AAA#.....####====####.......#AAA#======AAAAAAAAAAA#", "#AAAAAAAAAAAA====#AAA##.......========.......##AAA#=====AAAAAAAAAAAA#", "#AAAAAAAAAAAA====#AAAA#.......========.......#AAAA#=====AAAAAAAAAAAA#", "#AAAAAAAAAAAAA===#AAAA##......========......##AAAA#====AAAAAAAAAAAAA#", "#AAAAAAAAAAAAA===#AAAAA#......========......#AAAAA#====AAAAAAAAAAAAA#", "#AAAAAAAAAAAAAA==#AAAAA##.....========.....##AAAAA#===AAAAAAAAAAAAAA#", "#AAAAAAAAAAAAAA==#AAAAAA#.....===><===.....#AAAAAA#===AAAAAAAAAAAAAA#", "#AAAAAAAAAAAAAAA=#AAAAAA##....========....##AAAAAA#==AAAAAAAAAAAAAAA#", "#AAAAAAAAAAAAAAA=#AAAAAAA#....========....#AAAAAAA#==AAAAAAAAAAAAAAA#", "#AAAAAAAAAAAAAAAA#AAAAAAA##...========...##AAAAAAA#=AAAAAAAAAAAAAAAA#", "#AAAAAAAAAAAAAAAA#AAAAAAAA#...========...#AAAAAAAA#=AAAAAAAAAAAAAAAA#", "#AAAAAAAAAAAAAAAA#AAAAAAAA##..========..##AAAAAAAA#AAAAAAAAAAAAAAAAA#", "#AAAAAAAAAAAAAAAAA#AAAAAAAAA##========##AAAAAAAAAA#AAAAAAAAAAAAAAAAA#", "#AAAAAAAAAAAAAAAAA#AAAAAAAAAA########AAAAAAAAAAAAAA#AAAAAAAAAAAAAAAA#", "#AAAAAAAAAAAAAAAAA#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA#AAAAAAAAAAAAAAAA#", "#AAAAAAAAAAAAAAAAAA##################AAAAAA#########AAAAAAAAAAAAAAAA#", "#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA#", "#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA#", "#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA#", "######################################################################",]
+layout = """
+######################################################################
+#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA#
+#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA#
+#AAAA=========AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=========AAAAAAA#
+#AAA===========AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA===========AAAAAA#
+#AA=============AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=============AAAAA#
+#AA==============AAAAAAAA##################AAAAAA==============AAAAA#
+#AA==============AAAAAAA#AAAAAAAAAAAAAAAAAAA#AAAAA==============AAAA#
+#AAA=============AAAAAA#AAAAAAAAAAAAAAAAAAAAA#AAAA==============AAAA#
+#AAA=============AAAAA#AAAAA##############AAAA#AAA=============AAAAA#
+#AAAA============AAAA#AAAA##............##AAAA#AA==============AAAAA#
+#AAAA============AAAA#AAA##..............##AAAA#A=============AAAAAA#
+#AAAAA===========AAA#AAA##................##AAA#==============AAAAAA#
+#AAAAA===========AAA#AA##..................##AA#A============AAAAAAA#
+#AAAAAA==========AA#AAA#....................#AAA#============AAAAAAA#
+#AAAAAA==========AA#AA##....................##AA#A==========AAAAAAAA#
+#AAAAAAA=========A#AAA#......................#AAA#==========AAAAAAAA#
+#AAAAAAA=========A#AA##....####====####......##AA#=========AAAAAAAAA#
+#AAAAAAAA========#AAA#....##..======..##......#AA#=========AAAAAAAAA#
+#AAAAAAAA========#AAA#....#....====....#......#AA#A========AAAAAAAAA#
+#AAAAAAAAA=======#AA##....#....====....#......##AA#========AAAAAAAAA#
+#AAAAAAAAA=======#AA#.....+....====....+.......#AA#=======AAAAAAAAAA#
+#AAAAAAAAAA======#AA#.....#....====....#.......#AA#=======AAAAAAAAAA#
+#AAAAAAAAAA======#AA##....#....====....#......##AA#======AAAAAAAAAAA#
+#AAAAAAAAAAA=====#AAA#....##...====...##......#AAA#======AAAAAAAAAAA#
+#AAAAAAAAAAA=====#AAA#.....####====####.......#AAA#======AAAAAAAAAAA#
+#AAAAAAAAAAAA====#AAA##.......========.......##AAA#=====AAAAAAAAAAAA#
+#AAAAAAAAAAAA====#AAAA#.......========.......#AAAA#=====AAAAAAAAAAAA#
+#AAAAAAAAAAAAA===#AAAA##......========......##AAAA#====AAAAAAAAAAAAA#
+#AAAAAAAAAAAAA===#AAAAA#......========......#AAAAA#====AAAAAAAAAAAAA#
+#AAAAAAAAAAAAAA==#AAAAA##.....========.....##AAAAA#===AAAAAAAAAAAAAA#
+#AAAAAAAAAAAAAA==#AAAAAA#.....===><===.....#AAAAAA#===AAAAAAAAAAAAAA#
+#AAAAAAAAAAAAAAA=#AAAAAA##....========....##AAAAAA#==AAAAAAAAAAAAAAA#
+#AAAAAAAAAAAAAAA=#AAAAAAA#....========....#AAAAAAA#==AAAAAAAAAAAAAAA#
+#AAAAAAAAAAAAAAAA#AAAAAAA##...========...##AAAAAAA#=AAAAAAAAAAAAAAAA#
+#AAAAAAAAAAAAAAAA#AAAAAAAA#...========...#AAAAAAAA#=AAAAAAAAAAAAAAAA#
+#AAAAAAAAAAAAAAAA#AAAAAAAA##..========..##AAAAAAAA#AAAAAAAAAAAAAAAAA#
+#AAAAAAAAAAAAAAAAA#AAAAAAAAA##========##AAAAAAAAAA#AAAAAAAAAAAAAAAAA#
+#AAAAAAAAAAAAAAAAA#AAAAAAAAAA########AAAAAAAAAAAAAA#AAAAAAAAAAAAAAAA#
+#AAAAAAAAAAAAAAAAA#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA#AAAAAAAAAAAAAAAA#
+#AAAAAAAAAAAAAAAAAA##################AAAAAA#########AAAAAAAAAAAAAAAA#
+#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA#
+#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA#
+#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA#
+######################################################################
+"""
 
 [[maps]]
 x = -2
 y = 0
-layout = [ "#################################################################", "#,,,TTT,,,,,,,,,,,TTT,,,,,,,,,,,,,,,,,TTT,,,,,,,,,,,TTT,,,,,,,,#", "#,,,,,,,,TTT,,,,,,,,,,,,,TTT,,,,,,,,,,,,,,,,,TTT,,,,,,,,,,,TTT,#", "#,TTT,,,,,,,,,,,,TTT,,,,,,,,,,,,TTT,,,,,,,,,,,,,,,,,,TTT,,,,,,,#", "#,,,,,,,,TTT,,,,,,,,,,,TTT,,,,,,,,,,,,,TTT,,,,,,,,,,,,,,,,,TTT,#", "#,,,TTT,,,,,,,,,,,TTT,,,,,,,,,TTT,,,,,,,,,,,,,TTT,,,,,,,,,,,,,,#", "#,,,,,,,,,TTT,,,,,,,,,,,,,,,,,,,,,,,TTT,,,,,,,,,,,,,,,TTT,,,,,,#", "#TTT,,,,,,,,,,,,,TTT,,,,,,,,,TTT,,,,,,,,,,,,,TTT,,,,,,,,,,,,,,,#", "#,,,,,,,TTT,,,,,,,,,,,,,TTT,,,,,,,,,,,TTT,,,,,,,,,,,,,TTT,,,,,,#", "#,,,,,,,,,,,,,,,,TTT,,,,,,,,,,,,,,,,,,,,,,,,,,TTT,,,,,,,,,,,,,,#", "#,,,TTT,,,,,,,,,,,,,,,,,,,,,~~~~~,,,,,,,,,,,,,,,,,,,,,TTT,,,,,,#", "#,,,,,,,,TTT,,,,,,,,,TTT,,,~~~~~~~,,,,,,,TTT,,,,,,,,,,,,,,,TTT,#", "#,,,,,,,,,,,,,,,TTT,,,,,,,~~~~~~~~~,,,,,,,,,,,,,TTT,,,,,,,,,,,,#", "#TTT,,,,,,,,,,,,,,,,,,,,,~~~~~~~~~~~,,,,,,,,,,,,,,,,,,,,,,,,TTT#", "#,,,,,,,TTT,,,,,,,,,,,,,~~~~~~~~~~~~~,,,,,,,,,,,,,,TTT,,,,,,,,,#", "#,,,,,,,,,,,,,,,,TTT,,,~~~~~~~~~~~~~~~,,,,,TTT,,,,,,,,,,,,,,,,,#", "#,,,TTT,,,,,,,,,,,,,,,~~~~~PPPPPPP~~~~~,,,,,,,,,,,,,,,TTT,,,,,,#", "#,,,,,,,,TTT,,,,,,,,,~~~~~PP.....PP~~~~~,,,,,,,,TTT,,,,,,,,TTT,#", "#,,,,,,,,,,,,,,,TTT,,~~~~PP.......PP~~~~,,,TTT,,,,,,,,,,,,,,,,,#", "#TTT,,,,,,,,,,,,,,,,,~~~PP.........PP~~~,,,,,,,,,,,,,,,,,,,TTT,#", "#,,,,,,,TTT,,,,,,,,,~~~PP...........PP~~~,,,,,,,,TTT,,,,,,,,,,,#", "#,,,,,,,,,,,,,,,,,,~~~PP.............PP~~~,,,,,,,,,,,,,,,,,,,,,#", "#,,,TTT,,,,,,,,,,,~~~PP.....<..<.....PP~~~,,,,,,,,,,,,TTT,,,,,,#", "#,,,,,,,,TTT,,,,,,~~PP...............PP~~,,,,,,,TTT,,,,,,,,TTT,#", "#,,,,,,,,,,,,,,,,,~~PP...............PP~~,,TTT,,,,,,,,,,,,,,,,,#", "#TTT,,,,,,,,,,,,,~~~PP...............PP~~~,,,,,,,,,,,,,,,,,TTT,#", "#,,,,,,,TTT,,,,,,~~~PP...............PP~~~,,,,,TTT,,,,,,,,,,,,#", "#,,,,,,,,,,,,,,,,~~~~PP.............PP~~~~,,,,,,,,,,,,,,,,,,,,#", "#,,,TTT,,,,,,,,,~~~~~PP.............PP~~~~~,,,,,,,,,TTT,,,,,,,#", "#,,,,,,,,,TTT,,,~~~~~PP.............PP~~~~~,,,,TTT,,,,,,,,,TTT#", "#,,,,,,,,,,,,,,,~~~~~~PP...........PP~~~~~~,,,,,,,,,,,,,,,,,,,#", "#TTT,,,,,,,,,,,~~~~~~~PPP.........PPP~~~~~~~,,,,,,,,,,,,,,TTT,#", "#,,,,,,,TTT,,,~~~~~~~~~~PPPPPPPPPPP~~~~~~~~~~,,,,,TTT,,,,,,,,,#", "#,,,,,,,,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~TTT~~~~~,,,,,,,,,,,,,#", "#,,,TTT,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,~~~~,,,,,TTT,,,,,,#", "#,,,,,,,,,~~~~~~~~~~~TTT,,,,,,,TTT,,,,,,,,,,,~~~,,,,,,,,,,TTT,#", "#TTT,,,,,~~~~~~~~~~~,,,,,,,,,,,,,,,,,,,TTT,,,~~~,,,,,,,,,,,,,#", "#,,,,,~~~~~~~~~~~~~,,,TTT,,,,,,,,,,,,,,,,,,,~~~~~,,,,TTT,,,,,,#", "#,,,~~~~~~~~~~~TTT,,,,,,,,,,,TTT,,,,,,,,,,,~~~~~~~,,,,,,,,,TTT#", "#################################################################",]
+layout = """
+#################################################################
+#,,,TTT,,,,,,,,,,,TTT,,,,,,,,,,,,,,,,,TTT,,,,,,,,,,,TTT,,,,,,,,#
+#,,,,,,,,TTT,,,,,,,,,,,,,TTT,,,,,,,,,,,,,,,,,TTT,,,,,,,,,,,TTT,#
+#,TTT,,,,,,,,,,,,TTT,,,,,,,,,,,,TTT,,,,,,,,,,,,,,,,,,TTT,,,,,,,#
+#,,,,,,,,TTT,,,,,,,,,,,TTT,,,,,,,,,,,,,TTT,,,,,,,,,,,,,,,,,TTT,#
+#,,,TTT,,,,,,,,,,,TTT,,,,,,,,,TTT,,,,,,,,,,,,,TTT,,,,,,,,,,,,,,#
+#,,,,,,,,,TTT,,,,,,,,,,,,,,,,,,,,,,,TTT,,,,,,,,,,,,,,,TTT,,,,,,#
+#TTT,,,,,,,,,,,,,TTT,,,,,,,,,TTT,,,,,,,,,,,,,TTT,,,,,,,,,,,,,,,#
+#,,,,,,,TTT,,,,,,,,,,,,,TTT,,,,,,,,,,,TTT,,,,,,,,,,,,,TTT,,,,,,#
+#,,,,,,,,,,,,,,,,TTT,,,,,,,,,,,,,,,,,,,,,,,,,,TTT,,,,,,,,,,,,,,#
+#,,,TTT,,,,,,,,,,,,,,,,,,,,,~~~~~,,,,,,,,,,,,,,,,,,,,,TTT,,,,,,#
+#,,,,,,,,TTT,,,,,,,,,TTT,,,~~~~~~~,,,,,,,TTT,,,,,,,,,,,,,,,TTT,#
+#,,,,,,,,,,,,,,,TTT,,,,,,,~~~~~~~~~,,,,,,,,,,,,,TTT,,,,,,,,,,,,#
+#TTT,,,,,,,,,,,,,,,,,,,,,~~~~~~~~~~~,,,,,,,,,,,,,,,,,,,,,,,,TTT#
+#,,,,,,,TTT,,,,,,,,,,,,,~~~~~~~~~~~~~,,,,,,,,,,,,,,TTT,,,,,,,,,#
+#,,,,,,,,,,,,,,,,TTT,,,~~~~~~~~~~~~~~~,,,,,TTT,,,,,,,,,,,,,,,,,#
+#,,,TTT,,,,,,,,,,,,,,,~~~~~PPPPPPP~~~~~,,,,,,,,,,,,,,,TTT,,,,,,#
+#,,,,,,,,TTT,,,,,,,,,~~~~~PP.....PP~~~~~,,,,,,,,TTT,,,,,,,,TTT,#
+#,,,,,,,,,,,,,,,TTT,,~~~~PP.......PP~~~~,,,TTT,,,,,,,,,,,,,,,,,#
+#TTT,,,,,,,,,,,,,,,,,~~~PP.........PP~~~,,,,,,,,,,,,,,,,,,,TTT,#
+#,,,,,,,TTT,,,,,,,,,~~~PP...........PP~~~,,,,,,,,TTT,,,,,,,,,,,#
+#,,,,,,,,,,,,,,,,,,~~~PP.............PP~~~,,,,,,,,,,,,,,,,,,,,,#
+#,,,TTT,,,,,,,,,,,~~~PP.....<..<.....PP~~~,,,,,,,,,,,,TTT,,,,,,#
+#,,,,,,,,TTT,,,,,,~~PP...............PP~~,,,,,,,TTT,,,,,,,,TTT,#
+#,,,,,,,,,,,,,,,,,~~PP...............PP~~,,TTT,,,,,,,,,,,,,,,,,#
+#TTT,,,,,,,,,,,,,~~~PP...............PP~~~,,,,,,,,,,,,,,,,,TTT,#
+#,,,,,,,TTT,,,,,,~~~PP...............PP~~~,,,,,TTT,,,,,,,,,,,,#
+#,,,,,,,,,,,,,,,,~~~~PP.............PP~~~~,,,,,,,,,,,,,,,,,,,,#
+#,,,TTT,,,,,,,,,~~~~~PP.............PP~~~~~,,,,,,,,,TTT,,,,,,,#
+#,,,,,,,,,TTT,,,~~~~~PP.............PP~~~~~,,,,TTT,,,,,,,,,TTT#
+#,,,,,,,,,,,,,,,~~~~~~PP...........PP~~~~~~,,,,,,,,,,,,,,,,,,,#
+#TTT,,,,,,,,,,,~~~~~~~PPP.........PPP~~~~~~~,,,,,,,,,,,,,,TTT,#
+#,,,,,,,TTT,,,~~~~~~~~~~PPPPPPPPPPP~~~~~~~~~~,,,,,TTT,,,,,,,,,#
+#,,,,,,,,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~TTT~~~~~,,,,,,,,,,,,,#
+#,,,TTT,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,~~~~,,,,,TTT,,,,,,#
+#,,,,,,,,,~~~~~~~~~~~TTT,,,,,,,TTT,,,,,,,,,,,~~~,,,,,,,,,,TTT,#
+#TTT,,,,,~~~~~~~~~~~,,,,,,,,,,,,,,,,,,,TTT,,,~~~,,,,,,,,,,,,,#
+#,,,,,~~~~~~~~~~~~~,,,TTT,,,,,,,,,,,,,,,,,,,~~~~~,,,,TTT,,,,,,#
+#,,,~~~~~~~~~~~TTT,,,,,,,,,,,TTT,,,,,,,,,,,~~~~~~~,,,,,,,,,TTT#
+#################################################################
+"""
 
 [[maps]]
 x = 2
 y = 0
-layout = [ "###########################################################################", "#.........................................................................#", "#.########.########.########.########.########.########.########.########.#", "#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#", "#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#", "#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#", "#.########.########.########.########.########.########.########.########.#", "#.........................................................................#", "#.########.########.########.########.########.########.########.########.#", "#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#", "#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#", "#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#", "#.########.########.########.########.########.########.########.########.#", "#.........................................................................#", "#.........................................................................#", "#.......................###########################.......................#", "#......................##.........................##......................#", "#.....................##...........................##.....................#", "#....................##.............................##....................#", "#...................##...............................##...................#", "#..................##.................................##..................#", "#.................##...................................##.................#", "#................##.....................................##................#", "#...............##.......................................##...............#", "#..............##.........................................##..............#", "#.............##...................#####..................##.............#", "#............##...................##...##..................##............#", "#...........##....................#.....#...................##...........#", "#..........##.....................#.....#....................##..........#", "#.........##......................#..<..#.....................##.........#", "#........##.......................#.....#......................##........#", "#.......##........................#.....#.......................##.......#", "#......##.........................##...##........................##......#", "#.....##...........................#####..........................##.....#", "#....##...........................................................##....#", "#...##.............................................................##...#", "#..##...............................................................##..#", "#.##.................................................................##.#", "#.#...................................................................#.#", "#.#.........######+######...............................######+######..#.#", "#.#.........#...........#...............................#...........#..#.#", "#.#.........#...........#...............................#...........#..#.#", "#.#.........#....>......#...............................#....>......#..#.#", "#.#.........#...........#...............................#...........#..#.#", "#.#.........#...........#...............................#...........#..#.#", "#.#.........#############...............................#############..#.#", "#.#...................................................................#.#", "#.#####################################################################.#", "#.......................................................................#", "###########################################################################",]
+layout = """
+###########################################################################
+#.........................................................................#
+#.########.########.########.########.########.########.########.########.#
+#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#
+#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#
+#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#
+#.########.########.########.########.########.########.########.########.#
+#.........................................................................#
+#.########.########.########.########.########.########.########.########.#
+#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#
+#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#
+#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#......#.#
+#.########.########.########.########.########.########.########.########.#
+#.........................................................................#
+#.........................................................................#
+#.......................###########################.......................#
+#......................##.........................##......................#
+#.....................##...........................##.....................#
+#....................##.............................##....................#
+#...................##...............................##...................#
+#..................##.................................##..................#
+#.................##...................................##.................#
+#................##.....................................##................#
+#...............##.......................................##...............#
+#..............##.........................................##..............#
+#.............##...................#####..................##.............#
+#............##...................##...##..................##............#
+#...........##....................#.....#...................##...........#
+#..........##.....................#.....#....................##..........#
+#.........##......................#..<..#.....................##.........#
+#........##.......................#.....#......................##........#
+#.......##........................#.....#.......................##.......#
+#......##.........................##...##........................##......#
+#.....##...........................#####..........................##.....#
+#....##...........................................................##....#
+#...##.............................................................##...#
+#..##...............................................................##..#
+#.##.................................................................##.#
+#.#...................................................................#.#
+#.#.........######+######...............................######+######..#.#
+#.#.........#...........#...............................#...........#..#.#
+#.#.........#...........#...............................#...........#..#.#
+#.#.........#....>......#...............................#....>......#..#.#
+#.#.........#...........#...............................#...........#..#.#
+#.#.........#...........#...............................#...........#..#.#
+#.#.........#############...............................#############..#.#
+#.#...................................................................#.#
+#.#####################################################################.#
+#.......................................................................#
+###########################################################################
+"""
 
 [[maps]]
 x = -2
 y = -2
-layout = [ "######################################################################", "#....................................................................#", "#..####......................................................####....#", "#.#....#....................................................#....#...#", "#.#..<..#..................................................#......#..#", "#.#....#..................................................#........#.#", "#..####........##...................................##.....########.#", "#.............#..#.................................#..#.............#", "#............#....#...............................#....#...........#", "#...........#......#.............................#......#..........#", "#..........#........#...........................#........#.........#", "#.........#..........#.........................#..........#........#", "#........#............#.......................#............#.......#", "#.......#..............#.....................#..............#......#", "#......#................#...................#................#.....#", "#.....#..................#.................#..................#....#", "#....#....................#...............#....................#...#", "#...#......................#.............#......................#..#", "#..#........................#...........#........................#.#", "#.#..........................#.........#..........................##", "##............................#.......#............................#", "#..............................#.....#.............................#", "#...............................#...#..............................#", "#................................#.#...............................#", "#.................................#................................#", "#................................###...............................#", "#...............................#...#..............................#", "#..............................#.....#.............................#", "#.............................#.......#............................#", "#............................#.........#...........................#", "#...........................#...........#..........................#", "#..........................#.............#.........................#", "#.........................#...............#........................#", "#........................#.................#.......................#", "#.......................#...................#......................#", "#......................#.....................#.....................#", "#.....................#.......................#....................#", "#....................#.........................#...................#", "#...................#...........................#..................#", "#..................#.............................#.................#", "#.................#...............................#................#", "#................#.................................#...........#...#", "#...............##...................................##.......#.>..#", "#..................................................................#", "######################################################################",]
+layout = """
+######################################################################
+#....................................................................#
+#..####......................................................####....#
+#.#....#....................................................#....#...#
+#.#..<..#..................................................#......#..#
+#.#....#..................................................#........#.#
+#..####........##...................................##.....########.#
+#.............#..#.................................#..#.............#
+#............#....#...............................#....#...........#
+#...........#......#.............................#......#..........#
+#..........#........#...........................#........#.........#
+#.........#..........#.........................#..........#........#
+#........#............#.......................#............#.......#
+#.......#..............#.....................#..............#......#
+#......#................#...................#................#.....#
+#.....#..................#.................#..................#....#
+#....#....................#...............#....................#...#
+#...#......................#.............#......................#..#
+#..#........................#...........#........................#.#
+#.#..........................#.........#..........................##
+##............................#.......#............................#
+#..............................#.....#.............................#
+#...............................#...#..............................#
+#................................#.#...............................#
+#.................................#................................#
+#................................###...............................#
+#...............................#...#..............................#
+#..............................#.....#.............................#
+#.............................#.......#............................#
+#............................#.........#...........................#
+#...........................#...........#..........................#
+#..........................#.............#.........................#
+#.........................#...............#........................#
+#........................#.................#.......................#
+#.......................#...................#......................#
+#......................#.....................#.....................#
+#.....................#.......................#....................#
+#....................#.........................#...................#
+#...................#...........................#..................#
+#..................#.............................#.................#
+#.................#...............................#................#
+#................#.................................#...........#...#
+#...............##...................................##.......#.>..#
+#..................................................................#
+######################################################################
+"""
 
 [[maps]]
 x = 2
 y = 2
-layout = [ "######################################################################", "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#", "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#", "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#", "#~~~~~~~###########~~~~~~~~~~~~~~~~~~~~~~~~~~###########~~~~~~~~~~~~#", "#~~~~~~##.........##~~~~~~~~~~~~~~~~~~~~~~~~##.........##~~~~~~~~~~~#", "#~~~~~##...........##~~~~~~~~~~~~~~~~~~~~~~##...........##~~~~~~~~~~#", "#~~~~##.............##~~~~~~~~~~~~~~~~~~~~##.............##~~~~~~~~~#", "#~~~##...............##~~~~~~~~~~~~~~~~~~##...............##~~~~~~~~#", "#~~~#.................##~~~~~~~~~~~~~~~~##.................#~~~~~~~~#", "#~~##..................##~~~~~~~~~~~~~~##..................##~~~~~~~#", "#~~#....................##~~~~~~~~~~~~##....................#~~~~~~~#", "#~~#.....................##~~~~~~~~~~##.....................#~~~~~~~#", "#~~#......................##~~~~~~~~##......................#~~~~~~~#", "#~~#.......................##~~~~~~##.......................#~~~~~~~#", "#~~#........................##~~~~##........................#~~~~~~~#", "#~~#.........................##~~##.........................#~~~~~~~#", "#~~#..........................####..........................#~~~~~~~#", "#~~#................................................######..#~~~~~~~#", "#~~#...............................................##....##.#~~~~~~~#", "#~~#..............................................##......###~~~~~~~#", "#~~#.............................................##........#~~~~~~~~#", "#~~##...................######..................##........##~~~~~~~~#", "#~~~#..................##....##................##.........#~~~~~~~~~#", "#~~~##................##......##..............##........##~~~~~~~~~~#", "#~~~~#...............##........##............##.........#~~~~~~~~~~~#", "#~~~~##.............##..........##..........##........##~~~~~~~~~~~~#", "#~~~~~#............##............##........##.........#~~~~~~~~~~~~~#", "#~~~~~##..........##..............##......##........##~~~~~~~~~~~~~~#", "#~~~~~~#.........##................##....##.........#~~~~~~~~~~~~~~~#", "#~~~~~~##.......##..................##..##........##~~~~~~~~~~~~~~~~#", "#~~~~~~~#......##....................####.........#~~~~~~~~~~~~~~~~~#", "#~~~~~~~##....##......................##........##~~~~~~~~~~~~~~~~~~#", "#~~~~~~~~#...##.......................##.......#~~~~~~~~~~~~~~~~~~~~#", "#~~~~~~~~##.##........................##.....##~~~~~~~~~~~~~~~~~~~~~#", "#~~~~~~~~~###.........................##...##~~~~~~~~~~~~~~~~~~~~~~~#", "#~~~~~~~~~##..........................##.##~~~~~~~~~~~~~~~~~~~~~~~~~#", "#~~~~~~~~##...........................###~~~~~~~~~~~~~~~~~~~~~~~~~~~#", "#~~~~~~~##............................##~~~~~~~~~~~~~~~~~~~~~~~~~~~~#", "#~~~~~~##.............................##~~~~~~~~~~~~~~~~~~~~~~~~~~~~#", "#~~~~~##..............................##~~~~~~~~~~~~~~~~~~~~~~~~~~~~#", "#~~~~##...............................##~~~~~~~~~~~~~~~~~~~~~~~~~~~~#", "#~~~##................................##~~~~~~~~~~~~~~~~~~~~~~~~~~~~#", "#~~##.................................##~~~~~~~~~~~~~~~~~~~~~~~~~~~~#", "#~##..................................##~~~~~~~~~~~~~~~~~~~~~~~~~~~~#", "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#", "#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#", "######################################################################",]
+layout = """
+######################################################################
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~###########~~~~~~~~~~~~~~~~~~~~~~~~~~###########~~~~~~~~~~~~#
+#~~~~~~##.........##~~~~~~~~~~~~~~~~~~~~~~~~##.........##~~~~~~~~~~~#
+#~~~~~##...........##~~~~~~~~~~~~~~~~~~~~~~##...........##~~~~~~~~~~#
+#~~~~##.............##~~~~~~~~~~~~~~~~~~~~##.............##~~~~~~~~~#
+#~~~##...............##~~~~~~~~~~~~~~~~~~##...............##~~~~~~~~#
+#~~~#.................##~~~~~~~~~~~~~~~~##.................#~~~~~~~~#
+#~~##..................##~~~~~~~~~~~~~~##..................##~~~~~~~#
+#~~#....................##~~~~~~~~~~~~##....................#~~~~~~~#
+#~~#.....................##~~~~~~~~~~##.....................#~~~~~~~#
+#~~#......................##~~~~~~~~##......................#~~~~~~~#
+#~~#.......................##~~~~~~##.......................#~~~~~~~#
+#~~#........................##~~~~##........................#~~~~~~~#
+#~~#.........................##~~##.........................#~~~~~~~#
+#~~#..........................####..........................#~~~~~~~#
+#~~#................................................######..#~~~~~~~#
+#~~#...............................................##....##.#~~~~~~~#
+#~~#..............................................##......###~~~~~~~#
+#~~#.............................................##........#~~~~~~~~#
+#~~##...................######..................##........##~~~~~~~~#
+#~~~#..................##....##................##.........#~~~~~~~~~#
+#~~~##................##......##..............##........##~~~~~~~~~~#
+#~~~~#...............##........##............##.........#~~~~~~~~~~~#
+#~~~~##.............##..........##..........##........##~~~~~~~~~~~~#
+#~~~~~#............##............##........##.........#~~~~~~~~~~~~~#
+#~~~~~##..........##..............##......##........##~~~~~~~~~~~~~~#
+#~~~~~~#.........##................##....##.........#~~~~~~~~~~~~~~~#
+#~~~~~~##.......##..................##..##........##~~~~~~~~~~~~~~~~#
+#~~~~~~~#......##....................####.........#~~~~~~~~~~~~~~~~~#
+#~~~~~~~##....##......................##........##~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~#...##.......................##.......#~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~##.##........................##.....##~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~###.........................##...##~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~##..........................##.##~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~##...........................###~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~##............................##~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~##.............................##~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~##..............................##~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~##...............................##~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~##................................##~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~##.................................##~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~##..................................##~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+######################################################################
+"""
 
 [[maps]]
 x = 1
 y = -1
-layout = [ "#################################################################", "#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS#", "#SSSSSCSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSCSSSSSSSSS#", "#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS#", "#SSSSSSSSSSSCSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSCSSSSSSSSSSSSSSS#", "#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS#", "#SSSSCSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSCSSSS#", "#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS#", "#SSSSSSSSSSSSSSSSSSSSS,,,,,,,,,,,,,,,,,,,,,SSSSSSSSSSSSSSSSSSSSS#", "#SSSSSSSSSSSSCSSSSSSS,,,,,,,,,,,,,,,,,,,,,,,SSSSSSSCSSSSSSSSSSS#", "#SSSSSSSSSSSSSSSSSSS,,,,TTT,,,,,,,,,,,TTT,,,,SSSSSSSSSSSSSSSSSSS#", "#SSSSCSSSSSSSSSSSSS,,,,,,,,,,,,,,,,,,,,,,,,,,,SSSSSSSSSSSSSCSSSS#", "#SSSSSSSSSSSSSSSSS,,,,,,,,,,~~~~~~~~~~~,,,,,,,,SSSSSSSSSSSSSSSSS#", "#SSSSSSSSSSSSSSSSS,,,,,,,~~~~~~~~~~~~~~~,,,,,,,SSSSSSSSSSSSSSSSS#", "#SSSSSSSSSCSSSSSS,,,,,,,~~~~~~~~~~~~~~~~~,,,,,,,SSSSSSCSSSSSSSSS#", "#SSSSSSSSSSSSSSS,,,,,,~~~~~~~~~~~~~~~~~~~,,,,,,,SSSSSSSSSSSSSSS#", "#SSSSSSSSSSSSSSS,,,,,~~~~~~~~~~~~~~~~~~~~~,,,,,,,SSSSSSSSSSSSSS#", "#SSSSCSSSSSSSSS,,,,,~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,SSSSSSSSCSSSS#", "#SSSSSSSSSSSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,SSSSSSSSSSSSSS#", "#SSSSSSSSSSSSS,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,SSSSSSSSSSSSS#", "#SSSSSSSSSSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,SSSSSSSSSSSSS#", "#SSSSCSSSSSSS,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,SSSSSSSCSSSS#", "#SSSSSSSSSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,SSSSSSSSSSSS#", "#SSSSSSSSSSS,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,SSSSSSSSSSS#", "#SSSSSSSSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,SSSSSSSSSSS#", "#SSSSCSSSSS,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,SSSSSCSSSS#", "#SSSSSSSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,SSSSSSSSSS#", "#SSSSSSSSS,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,SSSSSSSSS#", "#SSSSSSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,SSSSSSSSS#", "#SSSSCSSS,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,SSSCSSS#", "#SSSSSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,SSSSSSSS#", "#SSSSSSS,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,SSSSSSS#", "#SSSSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,SSSSSSS#", "#SSSSCS,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,SCSSSS#", "#SSSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,SSSSSS#", "#SSSSS,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,SSSSS#", "#SSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,SSSSS#", "#SSSCS,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,CSSSSS#", "#SSSS,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,SSSSSS#", "#SSSS,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,SSSSSS#", "#SSSS,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,SSSSSS#", "#SSSSS,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SSSSSSS#", "#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS#", "#SSSSSCSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSCSSSSSSS#", "#################################################################",]
+layout = """
+#################################################################
+#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS#
+#SSSSSCSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSCSSSSSSSSS#
+#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS#
+#SSSSSSSSSSSCSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSCSSSSSSSSSSSSSSS#
+#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS#
+#SSSSCSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSCSSSS#
+#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS#
+#SSSSSSSSSSSSSSSSSSSSS,,,,,,,,,,,,,,,,,,,,,SSSSSSSSSSSSSSSSSSSSS#
+#SSSSSSSSSSSSCSSSSSSS,,,,,,,,,,,,,,,,,,,,,,,SSSSSSSCSSSSSSSSSSS#
+#SSSSSSSSSSSSSSSSSSS,,,,TTT,,,,,,,,,,,TTT,,,,SSSSSSSSSSSSSSSSSSS#
+#SSSSCSSSSSSSSSSSSS,,,,,,,,,,,,,,,,,,,,,,,,,,,SSSSSSSSSSSSSCSSSS#
+#SSSSSSSSSSSSSSSSS,,,,,,,,,,~~~~~~~~~~~,,,,,,,,SSSSSSSSSSSSSSSSS#
+#SSSSSSSSSSSSSSSSS,,,,,,,~~~~~~~~~~~~~~~,,,,,,,SSSSSSSSSSSSSSSSS#
+#SSSSSSSSSCSSSSSS,,,,,,,~~~~~~~~~~~~~~~~~,,,,,,,SSSSSSCSSSSSSSSS#
+#SSSSSSSSSSSSSSS,,,,,,~~~~~~~~~~~~~~~~~~~,,,,,,,SSSSSSSSSSSSSSS#
+#SSSSSSSSSSSSSSS,,,,,~~~~~~~~~~~~~~~~~~~~~,,,,,,,SSSSSSSSSSSSSS#
+#SSSSCSSSSSSSSS,,,,,~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,SSSSSSSSCSSSS#
+#SSSSSSSSSSSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,SSSSSSSSSSSSSS#
+#SSSSSSSSSSSSS,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,SSSSSSSSSSSSS#
+#SSSSSSSSSSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,SSSSSSSSSSSSS#
+#SSSSCSSSSSSS,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,SSSSSSSCSSSS#
+#SSSSSSSSSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,SSSSSSSSSSSS#
+#SSSSSSSSSSS,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,SSSSSSSSSSS#
+#SSSSSSSSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,SSSSSSSSSSS#
+#SSSSCSSSSS,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,SSSSSCSSSS#
+#SSSSSSSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,SSSSSSSSSS#
+#SSSSSSSSS,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,SSSSSSSSS#
+#SSSSSSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,SSSSSSSSS#
+#SSSSCSSS,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,SSSCSSS#
+#SSSSSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,SSSSSSSS#
+#SSSSSSS,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,SSSSSSS#
+#SSSSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,SSSSSSS#
+#SSSSCS,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,SCSSSS#
+#SSSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,SSSSSS#
+#SSSSS,,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,SSSSS#
+#SSSSS,,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,SSSSS#
+#SSSCS,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,CSSSSS#
+#SSSS,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,SSSSSS#
+#SSSS,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,SSSSSS#
+#SSSS,,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,SSSSSS#
+#SSSSS,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SSSSSSS#
+#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS#
+#SSSSSCSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSCSSSSSSS#
+#################################################################
+"""
 
 [[maps]]
 x = -1
 y = -1
-layout = [ "############################################################", "#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#", "#,,,TTT,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,TTT,,,,#", "#,,,,,,,,,,,,,,,,,,,,######################,,,,,,,,,,,,,,,,#", "#,,,,,,,,,,,,,,,,,###PPPPPPPPPPPPPPPPPPPP###,,,,,,,,,,,,,,,#", "#,,,,TTT,,,,,,,,##PPPPPPPPPPPPPPPPPPPPPPPPPP##,,,,,,TTT,,,,#", "#,,,,,,,,,,,,,##PPPP####################PPPP##,,,,,,,,,,,,,#", "#,,,,,,,,,,,##PPPP##..................##PPPP##,,,,,,,,,,,,,#", "#,,,,,,,,,,##PPPP##....................##PPPP##,,,,,,,,,,,,#", "#,,,,,,,,,##PPPP##....####....####......##PPPP##,,,,,,,,,,,#", "#,,,,,,,,##PPPP##....#....#..#....#......##PPPP##,,,,,,,,,,#", "#,,,,,,,##PPPP##.....#.<..+..+....#.......##PPPP##,,,,,,,,,#", "#,,,,,,##PPPP##......#....#..#....#........##PPPP##,,,,,,,,#", "#,,,,,##PPPP##.......####....####..........##PPPP##,,,,,,,#", "#,,,,,#PPPP##................................##PPPP#,,,,,,,#", "#,,,,,#PPPP#.........######++######...........#PPPP#,,,,,,,#", "#,,,,,#PPPP#.........#............#...........#PPPP#,,,,,,,#", "#,,,,,#PPPP#.........#............#...........#PPPP#,,,,,,,#", "#,,,,,#PPPP#.........#....####....#...........#PPPP#,,,,,,,#", "#,,,,,#PPPP#.........#....#..#....#...........#PPPP#,,,,,,,#", "#,,,,,#PPPP#.........+....#..#....+...........#PPPP#,,,,,,,#", "#,,,,,#PPPP#.........#....#..#....#...........#PPPP#,,,,,,,#", "#,,,,,#PPPP#.........#....####....#...........#PPPP#,,,,,,,#", "#,,,,,#PPPP#.........#............#...........#PPPP#,,,,,,,#", "#,,,,,#PPPP#.........#....>.......#...........#PPPP#,,,,,,,#", "#,,,,,#PPPP#.........#............#...........#PPPP#,,,,,,,#", "#,,,,,#PPPP#.........##############...........#PPPP#,,,,,,,#", "#,,,,,#PPPP##................................##PPPP#,,,,,,,#", "#,,,,,##PPPP##..............................##PPPP##,,,,,,,#", "#,,,,,,##PPPP##............................##PPPP##,,,,,,,,#", "#,,,,,,,##PPPP##..........................##PPPP##,,,,,,,,,#", "#,,,,,,,,##PPPP##........................##PPPP##,,,,,,,,,,#", "#,,,,,,,,,##PPPP##......................##PPPP##,,,,,,,,,,,#", "#,,,,,,,,,,##PPPP##....................##PPPP##,,,,,,,,,,,,#", "#,,,,,,,,,,,##PPPP####################PPPP##,,,,,,,,,,,,,,,#", "#,,,,TTT,,,,,,##PPPPPPPPPPPPPPPPPPPPPPPP##,,,,,,TTT,,,,,,,,#", "#,,,,,,,,,,,,,,,###PPPPPPPPPPPPPPPPPPPP###,,,,,,,,,,,,,,,,,#", "#,,,,,,,,,,,,,,,,,,######################,,,,,,,,,,,,,,,,,,#", "#,,,TTT,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,TTT,,,,#", "############################################################",]
+layout = """
+############################################################
+#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#
+#,,,TTT,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,TTT,,,,#
+#,,,,,,,,,,,,,,,,,,,,######################,,,,,,,,,,,,,,,,#
+#,,,,,,,,,,,,,,,,,###PPPPPPPPPPPPPPPPPPPP###,,,,,,,,,,,,,,,#
+#,,,,TTT,,,,,,,,##PPPPPPPPPPPPPPPPPPPPPPPPPP##,,,,,,TTT,,,,#
+#,,,,,,,,,,,,,##PPPP####################PPPP##,,,,,,,,,,,,,#
+#,,,,,,,,,,,##PPPP##..................##PPPP##,,,,,,,,,,,,,#
+#,,,,,,,,,,##PPPP##....................##PPPP##,,,,,,,,,,,,#
+#,,,,,,,,,##PPPP##....####....####......##PPPP##,,,,,,,,,,,#
+#,,,,,,,,##PPPP##....#....#..#....#......##PPPP##,,,,,,,,,,#
+#,,,,,,,##PPPP##.....#.<..+..+....#.......##PPPP##,,,,,,,,,#
+#,,,,,,##PPPP##......#....#..#....#........##PPPP##,,,,,,,,#
+#,,,,,##PPPP##.......####....####..........##PPPP##,,,,,,,#
+#,,,,,#PPPP##................................##PPPP#,,,,,,,#
+#,,,,,#PPPP#.........######++######...........#PPPP#,,,,,,,#
+#,,,,,#PPPP#.........#............#...........#PPPP#,,,,,,,#
+#,,,,,#PPPP#.........#............#...........#PPPP#,,,,,,,#
+#,,,,,#PPPP#.........#....####....#...........#PPPP#,,,,,,,#
+#,,,,,#PPPP#.........#....#..#....#...........#PPPP#,,,,,,,#
+#,,,,,#PPPP#.........+....#..#....+...........#PPPP#,,,,,,,#
+#,,,,,#PPPP#.........#....#..#....#...........#PPPP#,,,,,,,#
+#,,,,,#PPPP#.........#....####....#...........#PPPP#,,,,,,,#
+#,,,,,#PPPP#.........#............#...........#PPPP#,,,,,,,#
+#,,,,,#PPPP#.........#....>.......#...........#PPPP#,,,,,,,#
+#,,,,,#PPPP#.........#............#...........#PPPP#,,,,,,,#
+#,,,,,#PPPP#.........##############...........#PPPP#,,,,,,,#
+#,,,,,#PPPP##................................##PPPP#,,,,,,,#
+#,,,,,##PPPP##..............................##PPPP##,,,,,,,#
+#,,,,,,##PPPP##............................##PPPP##,,,,,,,,#
+#,,,,,,,##PPPP##..........................##PPPP##,,,,,,,,,#
+#,,,,,,,,##PPPP##........................##PPPP##,,,,,,,,,,#
+#,,,,,,,,,##PPPP##......................##PPPP##,,,,,,,,,,,#
+#,,,,,,,,,,##PPPP##....................##PPPP##,,,,,,,,,,,,#
+#,,,,,,,,,,,##PPPP####################PPPP##,,,,,,,,,,,,,,,#
+#,,,,TTT,,,,,,##PPPPPPPPPPPPPPPPPPPPPPPP##,,,,,,TTT,,,,,,,,#
+#,,,,,,,,,,,,,,,###PPPPPPPPPPPPPPPPPPPP###,,,,,,,,,,,,,,,,,#
+#,,,,,,,,,,,,,,,,,,######################,,,,,,,,,,,,,,,,,,#
+#,,,TTT,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,TTT,,,,#
+############################################################
+"""
 
