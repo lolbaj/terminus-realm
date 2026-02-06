@@ -54,6 +54,9 @@ class GameMap:
         # Visibility arrays - Default to fully visible (No Fog of War)
         self.explored = np.full((height, width), True, dtype=bool)
         self.visible = np.full((height, width), True, dtype=bool)
+        
+        # Start position (x, y) if defined in map data
+        self.start_position: Optional[Tuple[int, int]] = None
 
         # Load tile definitions from data
         self.tile_definitions = {}
@@ -237,6 +240,11 @@ class GameMap:
             for x, char in enumerate(row):
                 if x >= self.width:
                     break
+                
+                if char == "@":
+                    self.start_position = (x, y)
+                    self.tiles[y, x] = TILE_FLOOR
+                    continue
 
                 # Default to floor for spaces or unknown chars
                 tile_type = char_map.get(char, TILE_FLOOR)

@@ -146,11 +146,13 @@ class GameEngine:
         self.game_map = persistent_world.get_full_game_map()
         print("Loaded Full World Map")
 
-        # Start player in the center of the Town (Chunk 0,0)
-        # Center of Chunk 0,0 is at offset (25, 25) from the chunk origin
-        # Chunk 0,0 starts at (center_x, center_y)
-        start_x = persistent_world.center_x + 25
-        start_y = persistent_world.center_y + 25
+        # Start player
+        if persistent_world.player_start_pos:
+             start_x, start_y = persistent_world.player_start_pos
+        else:
+             # Fallback: Start player in the center of the Town (Chunk 0,0)
+             start_x = persistent_world.center_x + 25
+             start_y = persistent_world.center_y + 25
 
         # Ensure we don't spawn in a wall
         # Spiral search for free spot
