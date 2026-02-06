@@ -1,0 +1,14 @@
+CRASH REPORT:
+'GameEngine' object has no attribute 'swap_weapon'
+
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/home/projects/python/games/rpg1/src/main.py", line 18, in main
+    engine.run()
+  File "/data/data/com.termux/files/home/projects/python/games/rpg1/src/core/engine.py", line 122, in run
+    raise e
+  File "/data/data/com.termux/files/home/projects/python/games/rpg1/src/core/engine.py", line 108, in run
+    self.handle_input(input_event)
+  File "/data/data/com.termux/files/home/projects/python/games/rpg1/src/core/engine.py", line 240, in handle_input
+    self.swap_weapon()
+    ^^^^^^^^^^^^^^^^
+AttributeError: 'GameEngine' object has no attribute 'swap_weapon'

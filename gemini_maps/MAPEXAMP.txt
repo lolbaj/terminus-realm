@@ -1,0 +1,204 @@
+def create_ultimate_world_map() -> GameMap:
+    """Create a massive 80x60 world map with all biomes."""
+    
+    map_data = [
+        # --- NORTH: SNOW & ICE (*) & (I) ---
+        "********************************************************************************",
+        "**IIII*****I**********************************************************IIIII*****",
+        "*IIIIII***III**********************TTT*********TTT*******************IIIIIII****",
+        "*IIIIII***III**********************TTT*********TTT********************IIIII*****",
+        "**IIII*****I***********>***********TTT*********TTT******************************",
+        "**********************#*#*******************************************************",
+        "********************************************************************************",
+        "********************************************************************************",
+        "****TT**********TT**********TT*********TT*********TT**********TT*********TT*****",
+        "***TTTT********TTTT********TTTT*******TTTT*******TTTT********TTTT*******TTTT****",
+        "**,TTTT,******,TTTT,******,TTTT,*****,TTTT,*****,TTTT,******,TTTT,*****,TTTT,***",
+        # --- TRANSITION: SNOW TO GRASS ---
+        ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+        ",,TTT,,,,,,,,,TTT,,,,,,,,,TTT,,,,,,,,,TTT,,,,,,,,,TTT,,,,,,,,,TTT,,,,,,,,,TTT,,,",
+        ",,TTT,,,,,,,,,TTT,,,,,,,,,TTT,,,,,,,,,TTT,,,,,,,,,TTT,,,,,,,,,TTT,,,,,,,,,TTT,,,",
+        ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+        # --- WEST: FOREST (T) | CENTER: CITY (#, P) | EAST: OCEAN (~) ---
+        "TTTTT,TT,,,,,,,,,,,#######################################,,,,,,,,,,,,,,,,,,,,,,",
+        "TTTTT,TT,,,,,,,,,,,#PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP#,,,,,,,,,,,,SS~~~~~~~~",
+        "TTTTTTTT,,,,,,,,,,,#P...................................P#,,,,,,,,,,SSSS~~~~~~~~",
+        "TTTTTTTT,,,,,,,,,,,#P...................................P#,,,,,,,,,SSSSS~~~~~~~~",
+        "TTTTTTTT,,,,,,,,,,,#P..#####...#######...#######...#####P#,,,,,,,,SSSSSS~~~~~~~~",
+        "TTTTT,TT,,,,,,,,,,,#P..#...#...#.....#...#.....#...#...#P#,,,,,,,SSSSSSS~~~~~~~~",
+        "TTT,TTTT,,,,,,,,,,,+P..#.<.#...#.....#...#.....#...#...#P+PPPPPPPSSSSSSS~~~~~~~~",
+        "TTT,TTTT,,,,,,,,,,,#P..#...#...#.....#...#.....#...#...#P#,,,,,,,SSSSSSS~~~~~~~~",
+        "TTTTTTTT,,,,,,,,,,,#P..#####...#######...#######...#####P#,,,,,,,,SSSSSS~~~~~~~~",
+        "TTTTTTTT,,,,,,,,,,,#P...................................P#,,,,,,,,,SSSSS~~~~~~~~",
+        "TTTTTTTT,,,,,,,,,,,#P...................................P#,,,,,,,,,,SSSS~~~~~~~~",
+        "TTTT,TTT,,,,,,,,,,,#PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP#,,,,,,,,,,,SSS~~~~~~~~",
+        "TTTT,TTT,,,,,,,,,,,#P...................................P#,,,,,,,,,,,,SS~~~~~~~~",
+        "TTTTTTTT,,,,,,,,,,,#P..#####...#######...#######...#####P#,,,,,,,,,,,,,,,,~~~~~~",
+        "TTTTTTTT,,,,,,,,,,,#P..#...#...#.....#...#.....#...#...#P#,,,,,,,,,,,,,,,,~~~~~~",
+        "TTTTTTTT,,,,,,,,,,,#P..#...#...#.....#...#.....#...#...#P#,,,,,,,,,,,,,,,,~~~~~~",
+        "TTTTTTTT,,,,,,,,,,,+P..#...#...#..>..#...#..S..#...#...#P+PPPPPPPPPPPPPPPP~~~~~~",
+        "TTTTTTTT,,,,,,,,,,,#P..#...#...#.....#...#.....#...#...#P#,,,,,,,,,,,,,,,,~~~~~~",
+        "TTTTTTTT,,,,,,,,,,,#P..#####...#######...#######...#####P#,,,,,,,,,,,,,,,,~~~~~~",
+        "TTTTTTTT,,,,,,,,,,,#P...................................P#,,,,,,,,,,,,,,,,~~~~~~",
+        "TTTT,TTT,,,,,,,,,,,#P...................................P#,,,,,,,,,,,,,,,,~~~~~~",
+        "TTTT,TTT,,,,,,,,,,,#PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP#,,,,,,,,,,,,,,,,~~~~~~",
+        "TTTTTTTT,,,,,,,,,,,###################+###################,,,,,,,,,,,,,,,,~~~~~~",
+        "TTTTTTTT,,,,,,,,,,,,,,,,,,,,,,,,,,,,,PPP,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,~~~~~~",
+        "TTTTTTTT,,,,,,,,,,,,,,,,,,,,,,,,,,,,,PPP,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,~~~~~~",
+        "TTTT,TTT,,,,,,,,,,,,,,,,,,,,,,,,,,,,,PPP,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,~~~~~~",
+        # --- TRANSITION: GRASS TO SAND ---
+        ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,PPP,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+        "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSPPPSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+        "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSPPPSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+        "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSPPPSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+        # --- SOUTH: DESERT (S), CACTUS (C), LAVA (=), ASH (A) ---
+        "SSSSCCSSSSCCSSSSSSSSSSSSSSSSSSSSSSSSSPPPSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+        "SSSSSCCSSSSCCSSSSSSSSSSSSSSSSSSSSSSSSPPPSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+        "SSSSSSSSSSSSSSSSSSSSAAAAAAAASSSSSSSSSPPPSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+        "SSSSSSSSSSSSSSSSSSAAAAAAAAAAASSSSSSSSPPPSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+        "SSSSSSSSSSSSSSSSS=AAAAAAAAAAA=SSSSSSSPPPSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+        "SSSSSSSSSSSSSSSS===AAAAAAAAA===SSSSSSPPPSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+        "SSSSSSSSSSSSSSS=====AAAAAAA=====SSSSSPPPSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+        "SSSSSSSSSSSSSS=======AAAAA=======SSSSPPPSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+        "SSSSSSSSSSSSS=========AAA=========SSSPPPSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+        "SSSSSSSSSSSS===========A===========SSPPPSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+        "SSSSSSSSSSS=============A===========SPPPSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+        "SSSSSSSSSS===========================PPPSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+        "SSSSSSSSSS===========================PPPSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+        "SSSSSSSSSS===========================PPPSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+        "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS"
+    ]
+    
+    # Calculate dimensions
+    height = len(map_data)
+    width = len(map_data[0])
+    
+    # Initialize GameMap
+    game_map = GameMap(width, height)
+    game_map.load_from_string(map_data)
+    
+    return game_map
+
+import numpy as np
+
+def create_millennium_map() -> GameMap:
+    """
+    Creates a massive 1000x1000 fixed world.
+    Uses direct array manipulation for speed, then stamps handmade structures.
+    """
+    WIDTH = 1000
+    HEIGHT = 1000
+    
+    # 1. Initialize the massive map
+    game_map = GameMap(WIDTH, HEIGHT)
+    
+    # ---------------------------------------------------------
+    # STEP 2: PAINT THE BIOMES (The "Canvas")
+    # ---------------------------------------------------------
+    
+    # Fill world with Grass first
+    game_map.tiles[:] = TILE_GRASS
+
+    # --- NORTH: The Frozen Wastes (Top 200 rows) ---
+    # Paint area Snow
+    game_map.tiles[0:200, :] = TILE_SNOW
+    # Paint the deep North Ocean
+    game_map.tiles[0:50, :] = TILE_ICE 
+
+    # --- SOUTH: The Burning Lands (Bottom 200 rows) ---
+    # Paint area Sand
+    game_map.tiles[800:1000, :] = TILE_SAND
+    # Paint the deep South Lava rivers
+    game_map.tiles[900:1000, 300:700] = TILE_LAVA
+
+    # --- WEST: The Elder Forest (Left 200 cols) ---
+    # Paint heavy trees
+    game_map.tiles[200:800, 0:200] = TILE_TREE
+    # Clear some paths through the forest
+    game_map.tiles[480:520, 0:200] = TILE_GRASS  # West Road
+
+    # --- EAST: The Great Ocean (Right 200 cols) ---
+    game_map.tiles[:, 800:1000] = TILE_WATER
+    # A sandy beach transition
+    game_map.tiles[:, 790:800] = TILE_SAND
+
+    # --- CENTER: The Capital Roads ---
+    # Vertical Highway
+    game_map.tiles[100:900, 495:505] = TILE_PAVEMENT
+    # Horizontal Highway
+    game_map.tiles[495:505, 100:900] = TILE_PAVEMENT
+
+    # ---------------------------------------------------------
+    # STEP 3: STAMP HAND-CRAFTED MAPS (The "Details")
+    # ---------------------------------------------------------
+    
+    # We define a helper to stamp text-based maps onto the grid
+    def stamp_map(x_offset, y_offset, string_map):
+        """Overlay a list of strings onto the existing map array."""
+        # Legend for parsing your strings
+        char_map = {
+            ".": TILE_FLOOR, "#": TILE_WALL, "+": TILE_DOOR, "~": TILE_WATER,
+            ",": TILE_GRASS, "T": TILE_TREE, ">": TILE_STAIRS_DOWN, 
+            "<": TILE_STAIRS_UP, "S": TILE_SAND, "P": TILE_PAVEMENT, 
+            "*": TILE_SNOW, "=": TILE_LAVA, "A": TILE_ASH, "C": TILE_CACTUS, 
+            "I": TILE_ICE
+        }
+        
+        for y, row in enumerate(string_map):
+            world_y = y_offset + y
+            if world_y >= HEIGHT: break
+            
+            for x, char in enumerate(row):
+                world_x = x_offset + x
+                if world_x >= WIDTH: break
+                
+                if char in char_map:
+                    game_map.tiles[world_y, world_x] = char_map[char]
+
+    # --- A. Place the GRAND CASTLE in the exact center ---
+    castle_design = [
+        "########################################",
+        "#PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP#",
+        "#P....................................P#",
+        "#P..#######..######..######..#######..P#",
+        "#P..#.....#..#....#..#....#..#.....#..P#",
+        "#P..#.....#..#....#..#....#..#.....#..P#",
+        "+P..#..S..#..#.<..#..#..>..#..#..S..#..P#",
+        "#P..#.....#..#....#..#....#..#.....#..P#",
+        "#P..#######..######..######..#######..P#",
+        "#P....................................P#",
+        "#PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP#",
+        "####################+###################"
+    ]
+    # Center logic: (1000/2) - (Width/2)
+    stamp_map(480, 480, castle_design)
+
+    # --- B. Place the ICE FORTRESS in the North ---
+    ice_fort = [
+        "IIIIIIIIIIIIIIII",
+        "I**************I",
+        "I*IIII****IIII*I",
+        "I*I..I****I..I*I",
+        "I*I..<****>..I*I",
+        "I*IIII****IIII*I",
+        "I**************I",
+        "IIIIIIIIIIIIIIII"
+    ]
+    stamp_map(490, 100, ice_fort)
+
+    # --- C. Place the VOLCANO SHRINE in the South ---
+    volcano_shrine = [
+        "======AAAA======",
+        "====AAAAAAAA====",
+        "===AAACCCAAA====",
+        "==AAACCCCCAAA===",
+        "=AAACCC<CCCAAA==",
+        "==AAACCCCCAAA===",
+        "===AAACCCAAA====",
+        "====AAAAAAAA====",
+        "======AAAA======"
+    ]
+    stamp_map(490, 920, volcano_shrine)
+
+    return game_map
+
