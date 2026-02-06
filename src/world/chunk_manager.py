@@ -31,12 +31,12 @@ class Chunk:
         self.chunk_type = chunk_type  # "overworld", "dungeon", or "mixed"
         self.seed = seed
 
-        # Generate the map for this chunk based on type
-        if chunk_type == "dungeon":
-            self.map = generate_dungeon_chunk(x, y, size, seed)
-        else:
-            # Default to Rucoy-style biome generation for overworld and mixed
-            self.map = generate_biome_chunk(x, y, size, seed)
+        # Fetch chunk from PersistentWorld
+        from world.persistent_world import get_persistent_world
+        persistent_world = get_persistent_world()
+        
+        # This returns a copy of the slice from the global map
+        self.map = persistent_world.get_chunk(x, y, size)
 
         # Store entities that belong to this chunk
         self.entities: Set[int] = set()
