@@ -10,13 +10,14 @@ A mobile-optimized roguelike game built with Python, designed specifically for T
 
 ## Features
 
-- **Mobile-First Controls:** Prioritizes VI-keys (`h`, `j`, `k`, `l`) for efficient one-handed or thumb-based navigation.
+- **Mobile-First Controls:** Prioritizes VI-keys (`w`, `a`, `s`, `d`) for efficient one-handed or thumb-based navigation.
 - **Procedural Generation:** Explore an infinite world generated on-the-fly.
 - **ECS Architecture:** Modular design for entities, components, and systems.
 - **Performance Optimized:** Uses `numpy` for map data and `numba` JIT compilation for FOV and pathfinding.
 - **Battery Efficient:** Optimized game loop and rendering to preserve mobile battery life.
 
-## Quick Start
+## Quick Start / Running the Game
+```python -m src.main```
 
 ### Prerequisites
 
@@ -32,12 +33,6 @@ cd terminus-realm
 
 # Install dependencies
 pip install -r requirements.txt
-```
-
-### Running the Game
-
-```bash
-python src/main.py
 ```
 
 ## Controls
