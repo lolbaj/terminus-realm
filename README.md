@@ -16,15 +16,7 @@ A mobile-optimized roguelike game built with Python, designed specifically for T
 - **Performance Optimized:** Uses `numpy` for map data and `numba` JIT compilation for FOV and pathfinding.
 - **Battery Efficient:** Optimized game loop and rendering to preserve mobile battery life.
 
-## Quick Start / Running the Game
-```python -m src.main```
-
-### Prerequisites
-
-- Python 3.11+
-- Termux (for Android users)
-
-### Installation
+## Installation 
 
 ```bash
 # Clone the repository
@@ -35,19 +27,30 @@ cd terminus-realm
 pip install -r requirements.txt
 ```
 
+### Quick Start / Running the Game
+```bash
+python -m src.main
+```
+
+### Prerequisites
+
+- Python 3.11+
+- Termux (for Android users)
+
+
 ## Controls
 
-| Key | Action |
-|-----|--------|
+| Key        | Action |
+|-----       |--------|
 | `w`, `a`, `s`, `d` | Move North, West, South, East |
 | `q`, `e`, `z`, `c` | Move NW, NE, SW, SE |
-| `Arrows` | Move N, S, E, W |
-| `Space` | Open Command Menu |
+| `Arrows`  | Move N, S, E, W   |
+| `Space`   | Open Command Menu |
 | `x` / `e` | Select / Interact |
-| `i` | Inventory |
-| `g` | Pickup Item |
-| `t` | Fire Ranged Weapon |
-| `p` | Quit Game |
+| `i`       | Inventory         |
+| `g`       | Pickup Item       |
+| `t`       | Fire Ranged Weapon|
+| `p`       | Quit Game         |
 
 ## Architecture
 
