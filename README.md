@@ -1,48 +1,68 @@
 # Terminus Realm
 
-A mobile-optimized roguelike game built with Python, designed specifically for Termux and mobile devices.
+A mobile-optimized roguelike game built with Python, designed specifically for Termux and Android devices.
+
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/lolbaj/terminus-realm)
+
+## Overview
+
+**Terminus Realm** is a high-performance, terminal-based roguelike designed from the ground up for mobile users using Termux. It utilizes an Entity Component System (ECS) architecture and is optimized for low-power devices without sacrificing depth or performance.
 
 ## Features
 
-- Mobile-friendly controls (VI keys)
-- Procedurally generated worlds
-- Entity Component System (ECS) architecture
-- Turn-based gameplay optimized for mobile
-- Memory-efficient design for mobile devices
+- **Mobile-First Controls:** Prioritizes VI-keys (`h`, `j`, `k`, `l`) for efficient one-handed or thumb-based navigation.
+- **Procedural Generation:** Explore an infinite world generated on-the-fly.
+- **ECS Architecture:** Modular design for entities, components, and systems.
+- **Performance Optimized:** Uses `numpy` for map data and `numba` JIT compilation for FOV and pathfinding.
+- **Battery Efficient:** Optimized game loop and rendering to preserve mobile battery life.
 
-## Installation
+## Quick Start
 
-1. Clone the repository
-2. Install dependencies: `pip install -r requirements.txt`
-3. Run the game: `python -m src.main`
+### Prerequisites
+
+- Python 3.11+
+- Termux (for Android users)
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/lolbaj/terminus-realm.git
+cd terminus-realm
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### Running the Game
+
+```bash
+python src/main.py
+```
 
 ## Controls
 
-- `h`, `j`, `k`, `l`: Move left, down, up, right
-- `y`, `u`, `b`, `n`: Move diagonally
-- `Space`: Open command menu
-- `Enter`: Select menu options
+| Key | Action |
+|-----|--------|
+| `h`, `j`, `k`, `l` | Move West, South, North, East |
+| `y`, `u`, `b`, `n` | Move NW, NE, SW, SE |
+| `Space` | Open Command Menu |
+| `Enter` | Select Menu Option |
 
 ## Architecture
 
-The game follows an Entity Component System (ECS) architecture:
+- **Core Engine:** `src/core/engine.py` handles the main loop.
+- **ECS:** Base implementation in `src/core/ecs.py`.
+- **World Gen:** Chunk-based loading in `src/world/chunk_manager.py`.
 
-- **Entities**: Unique IDs that represent game objects
-- **Components**: Data containers that hold properties
-- **Systems**: Functions that operate on entities with specific components
+## Development Roadmap
 
-## Development Phases
+- [x] **Phase 0-1:** Foundation & Movement
+- [ ] **Phase 2:** Field of View & Visibility
+- [ ] **Phase 3:** World Expansion & Procedural Generation
+- [ ] **Phase 4:** Advanced AI & Combat Systems
+- [ ] **Phase 5:** Polish, Sound, and Optimization
 
-1. **Phase 0**: Foundation Setup (Complete)
-2. **Phase 1**: Basic World and Player Movement
-3. **Phase 2**: Field of View and Visibility
-4. **Phase 3**: World Expansion and Procedural Generation
-5. **Phase 4**: Advanced Features and AI
-6. **Phase 5**: Polish and Optimization
+---
 
-## Performance Optimizations
-
-- Memory-efficient data structures (`__slots__`)
-- Numba JIT compilation for critical functions
-- Efficient rendering with diff algorithms
-- Chunked world loading system
+Built with ❤️ for the Termux community.
