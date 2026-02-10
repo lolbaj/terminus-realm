@@ -308,6 +308,8 @@ class PersistentWorld:
                         x - 10, y - 10, 20, 20, "dungeon"
                     )
                     self.areas[(x - 10, y - 10)].biome = "mountain_cave"
+                    # Place Dungeon Entrance
+                    self.world_map[y, x] = TILE_STAIRS_DOWN
                     dungeon_count += 1
                 elif moist > 0.6 and elev < 0.7 and np.random.random() < 0.15:
                     self.areas[(x - 15, y - 15)] = WorldArea(
