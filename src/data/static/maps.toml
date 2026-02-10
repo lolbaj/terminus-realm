@@ -2,7 +2,8 @@
 # Layouts use multi-line strings for easy editing.
 
 [[maps]]
-name = "Town Center"x = 0
+name = "Town Center"
+x = 0
 y = 0
 layout = """
 TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT

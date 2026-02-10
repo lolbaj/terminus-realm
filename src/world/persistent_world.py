@@ -92,7 +92,7 @@ class PersistentWorld:
         self.biome_map: Optional[np.ndarray] = None
         self.area_map: Optional[np.ndarray] = None  # Maps each tile to its area type
         self.world_file = "src/data/saves/persistent_world.pkl"
-        
+
         # Player start position from static maps
         self.player_start_pos: Optional[Tuple[int, int]] = None
 
@@ -225,11 +225,11 @@ class PersistentWorld:
                     wy = start_y + r
 
                     if 0 <= wx < self.world_width and 0 <= wy < self.world_height:
-                        
+
                         # Handle Player Start
                         if char == "@":
                             self.player_start_pos = (wx, wy)
-                            char = "." # Treat as floor
+                            char = "."  # Treat as floor
 
                         # Set biome to town for town-like tiles, or special biomes
                         if char in ("#", ".", "+", "P"):

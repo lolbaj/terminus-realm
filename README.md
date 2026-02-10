@@ -1,12 +1,18 @@
 # Terminus Realm
 
-A mobile-optimized roguelike game built with Python, designed specifically for Termux and Android devices.
+A mobile-optimized MMORPG game with a Python client and Go server, designed specifically for Termux and Android devices.
 
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/lolbaj/terminus-realm)
 
 ## Overview
 
-**Terminus Realm** is a high-performance, terminal-based roguelike designed from the ground up for mobile users using Termux. It utilizes an Entity Component System (ECS) architecture and is optimized for low-power devices without sacrificing depth or performance.
+**Terminus Realm** is a high-performance, terminal-based MMORPG designed from the ground up for mobile users using Termux. It features a Python client for the terminal UI and a Go-based server for handling multiple players, world state management, and data persistence. The architecture utilizes an Entity Component System (ECS) and is optimized for low-power devices without sacrificing depth or performance.
+
+## Architecture
+
+- **Client (Python)**: Terminal-based UI using Rich and ECS for local rendering
+- **Server (Go)**: Concurrent WebSocket server handling multiple players, game logic, and persistence
+- **Database**: PostgreSQL for persistent player and world data
 
 ## Features
 
@@ -15,59 +21,62 @@ A mobile-optimized roguelike game built with Python, designed specifically for T
 - **ECS Architecture:** Modular design for entities, components, and systems.
 - **Performance Optimized:** Uses `numpy` for map data and `numba` JIT compilation for FOV and pathfinding.
 - **Battery Efficient:** Optimized game loop and rendering to preserve mobile battery life.
+- **Multiplayer Support:** Connect with other players in a persistent world.
+- **Data Persistence:** Player progress and world state saved to database.
 
 ## Quick Start
 
 ### Prerequisites
 
-- Python 3.11+
-- Termux (for Android users)
+- Python 3.8+
+- Go 1.21+
+- PostgreSQL
 
-### Installation
+### Server Setup
 
-```bash
-# Clone the repository
-git clone https://github.com/lolbaj/terminus-realm.git
-cd terminus-realm
+1. Install PostgreSQL and create a database
+2. Set up environment variables:
+   ```bash
+   export DATABASE_URL="host=localhost user=terminus password=terminus dbname=terminus_realm sslmode=disable"
+   ```
+3. Navigate to the server directory and run:
+   ```bash
+   cd server
+   go run cmd/server/main.go
+   ```
 
-# Install dependencies
-pip install -r requirements.txt
+### Client Setup
+
+1. Install Python dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. Run the multiplayer client:
+   ```bash
+   python src/main_multiplayer.py
+   ```
+
+## Project Structure
+
+```
+terminus-realm/
+├── src/                 # Python client source code
+├── server/              # Go server source code
+│   ├── cmd/             # Main application
+│   ├── handlers/        # WebSocket connection handlers
+│   ├── messages/        # Message types and protocols
+│   ├── models/          # Data models
+│   ├── network/         # Network layer
+│   ├── persistence/     # Database operations
+│   └── services/        # Business logic
+├── requirements.txt     # Python dependencies
+└── README.md
 ```
 
-### Running the Game
+## Contributing
 
-```bash
-python src/main.py
-```
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
-## Controls
+## License
 
-| Key | Action |
-|-----|--------|
-| `w`, `a`, `s`, `d` | Move North, West, South, East |
-| `q`, `e`, `z`, `c` | Move NW, NE, SW, SE |
-| `Arrows` | Move N, S, E, W |
-| `Space` | Open Command Menu |
-| `x` / `e` | Select / Interact |
-| `i` | Inventory |
-| `g` | Pickup Item |
-| `t` | Fire Ranged Weapon |
-| `p` | Quit Game |
-
-## Architecture
-
-- **Core Engine:** `src/core/engine.py` handles the main loop.
-- **ECS:** Base implementation in `src/core/ecs.py`.
-- **World Gen:** Chunk-based loading in `src/world/chunk_manager.py`.
-
-## Development Roadmap
-
-- [x] **Phase 0-1:** Foundation & Movement
-- [x] **Phase 2:** Field of View & Visibility
-- [x] **Phase 3:** World Expansion & Procedural Generation
-- [ ] **Phase 4:** Advanced AI & Combat Systems (In Progress)
-- [ ] **Phase 5:** Polish, Sound, and Optimization
-
----
-
-Built with ❤️ for the Termux community.
+This project is licensed under the MIT License - see the LICENSE file for details.

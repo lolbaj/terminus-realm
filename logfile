@@ -1,0 +1,17 @@
+2026-02-07 23:33:29.190 IST [5725] LOG:  starting PostgreSQL 18.1 on aarch64-unknown-linux-android, compiled by Android (13989888, +pgo, +bolt, +lto, +mlgo, based on r563880c) clang version 21.0.0 (https://android.googlesource.com/toolchain/llvm-project 5e96669f06077099aa41290cdb4c5e6fa0f59349), 64-bit
+2026-02-07 23:33:29.192 IST [5725] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2026-02-07 23:33:29.194 IST [5725] LOG:  listening on Unix socket "/data/data/com.termux/files/usr/tmp/.s.PGSQL.5432"
+2026-02-07 23:33:29.232 IST [5734] LOG:  database system was shut down at 2026-02-07 23:20:44 IST
+2026-02-07 23:33:29.254 IST [5725] LOG:  database system is ready to accept connections
+2026-02-07 23:33:36.575 IST [5835] FATAL:  database "u0_a377" does not exist
+2026-02-07 23:36:23.029 IST [5725] LOG:  received smart shutdown request
+2026-02-07 23:36:23.055 IST [5725] LOG:  background worker "logical replication launcher" (PID 5737) exited with exit code 1
+2026-02-07 23:36:23.060 IST [5732] LOG:  shutting down
+2026-02-07 23:36:23.066 IST [5732] LOG:  checkpoint starting: shutdown immediate
+2026-02-07 23:36:23.146 IST [5732] LOG:  checkpoint complete: wrote 0 buffers (0.0%), wrote 3 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.017 s, sync=0.004 s, total=0.086 s; sync files=2, longest=0.002 s, average=0.002 s; distance=0 kB, estimate=0 kB; lsn=0/1BF5B90, redo lsn=0/1BF5B90
+2026-02-07 23:36:23.205 IST [5725] LOG:  database system is shut down
+2026-02-07 23:36:31.764 IST [6880] LOG:  starting PostgreSQL 18.1 on aarch64-unknown-linux-android, compiled by Android (13989888, +pgo, +bolt, +lto, +mlgo, based on r563880c) clang version 21.0.0 (https://android.googlesource.com/toolchain/llvm-project 5e96669f06077099aa41290cdb4c5e6fa0f59349), 64-bit
+2026-02-07 23:36:31.766 IST [6880] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2026-02-07 23:36:31.768 IST [6880] LOG:  listening on Unix socket "/data/data/com.termux/files/usr/tmp/.s.PGSQL.5432"
+2026-02-07 23:36:31.802 IST [6888] LOG:  database system was shut down at 2026-02-07 23:36:23 IST
+2026-02-07 23:36:31.820 IST [6880] LOG:  database system is ready to accept connections

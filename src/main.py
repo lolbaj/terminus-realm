@@ -4,12 +4,23 @@ Main entry point for the roguelike game.
 
 import sys
 import os
+import toml
 
 # Add the directory containing this file (src) to the Python path
 # This allows imports like 'from core.engine import ...' to work
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from core.engine import GameEngine
+
+# Load configuration from TOML file
+CONFIG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config.toml')
+
+def load_config():
+    """Load configuration from TOML file."""
+    with open(CONFIG_FILE, 'r') as f:
+        return toml.load(f)
+
+CONFIG = load_config()
 
 
 def main():

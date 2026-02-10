@@ -44,7 +44,7 @@ class GameEngine:
             (CONFIG.screen_width, CONFIG.screen_height)
         )
         self.console = Console()
-        self.renderer = Renderer(self.console, t_cols, t_lines)
+        self.renderer = Renderer()
 
         # Initialize input handling
         self.input_handler = InputHandler()
@@ -97,41 +97,46 @@ class GameEngine:
         # Initialize the game
         self.initialize_game()
 
+        self.renderer.start()
+
         # Main game loop
         loop_count = 0
-        while self.running:
-            try:
-                loop_count += 1
-                current_time = time.time()
-                delta_time = current_time - self.last_time
-                self.last_time = current_time
+        try:
+            while self.running:
+                try:
+                    loop_count += 1
+                    current_time = time.time()
+                    delta_time = current_time - self.last_time
+                    self.last_time = current_time
 
-                # Update accumulator
-                self.accumulator += delta_time
+                    # Update accumulator
+                    self.accumulator += delta_time
 
-                # Process fixed updates
-                while self.accumulator >= self.fixed_timestep:
-                    self.update(self.fixed_timestep)
-                    self.accumulator -= self.fixed_timestep
+                    # Process fixed updates
+                    while self.accumulator >= self.fixed_timestep:
+                        self.update(self.fixed_timestep)
+                        self.accumulator -= self.fixed_timestep
 
-                # Check for input
-                input_event = self.input_handler.check_for_input()
-                if input_event:
-                    self.handle_input(input_event)
+                    # Check for input
+                    input_event = self.input_handler.check_for_input()
+                    if input_event:
+                        self.handle_input(input_event)
 
-                # Render (variable rate)
-                self.render()
+                    # Render (variable rate)
+                    self.render()
 
-                # Control frame rate
-                self.throttle_framerate()
-            except Exception as e:
-                import traceback
+                    # Control frame rate
+                    self.throttle_framerate()
+                except Exception as e:
+                    import traceback
 
-                with open("game_debug.log", "a") as f:
-                    f.write(
-                        f"Loop Crash at iteration {loop_count}: {e}\n{traceback.format_exc()}\n"
-                    )
-                raise e
+                    with open("game_debug.log", "a") as f:
+                        f.write(
+                            f"Loop Crash at iteration {loop_count}: {e}\n{traceback.format_exc()}\n"
+                        )
+                    raise e
+        finally:
+            self.renderer.stop()
 
     def initialize_game(self):
         """Initialize game state."""
@@ -148,11 +153,11 @@ class GameEngine:
 
         # Start player
         if persistent_world.player_start_pos:
-             start_x, start_y = persistent_world.player_start_pos
+            start_x, start_y = persistent_world.player_start_pos
         else:
-             # Fallback: Start player in the center of the Town (Chunk 0,0)
-             start_x = persistent_world.center_x + 25
-             start_y = persistent_world.center_y + 25
+            # Fallback: Start player in the center of the Town (Chunk 0,0)
+            start_x = persistent_world.center_x + 25
+            start_y = persistent_world.center_y + 25
 
         # Ensure we don't spawn in a wall
         # Spiral search for free spot
@@ -814,5 +819,6 @@ class GameEngine:
 
     def quit(self):
         """Quit the game."""
+        self.renderer.stop()
         self.input_handler.restore_terminal()
         self.running = False

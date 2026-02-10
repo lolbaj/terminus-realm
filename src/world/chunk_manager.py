@@ -5,7 +5,6 @@ Implements a rolling buffer system to manage world chunks efficiently.
 
 import numpy as np
 from typing import Dict, Tuple, Optional, Set
-from world.generator import generate_dungeon_chunk, generate_biome_chunk
 from world.map import (
     TILE_WALL,
 )
@@ -33,8 +32,9 @@ class Chunk:
 
         # Fetch chunk from PersistentWorld
         from world.persistent_world import get_persistent_world
+
         persistent_world = get_persistent_world()
-        
+
         # This returns a copy of the slice from the global map
         self.map = persistent_world.get_chunk(x, y, size)
 

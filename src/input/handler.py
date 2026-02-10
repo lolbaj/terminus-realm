@@ -7,185 +7,99 @@ from typing import Optional
 from dataclasses import dataclass
 import sys
 import select
-import tty
 import termios
-import io
+import time
+
+
+from config import CONFIG
 
 
 @dataclass
 class InputEvent:
     """Represents an input event."""
 
-    action_type: str
+    key: str
+    action_type: str = ""
     dx: int = 0
     dy: int = 0
+    timestamp: float = 0.0
 
 
 class InputHandler:
     """Handles keyboard input for the game."""
 
     def __init__(self):
-        from config import CONFIG
-        
-        # Load controls from config or use defaults
-        if CONFIG.controls and "movement" in CONFIG.controls:
-            # Convert list coords to tuples for internal logic
-            self.movement_keys = {
-                k: tuple(v) for k, v in CONFIG.controls["movement"].items()
-            }
+        if sys.stdin.isatty():
+            self.stdin_fd = sys.stdin.fileno()
+            self.old_settings = termios.tcgetattr(self.stdin_fd)
+            self.is_tty = True
+            self.setup_terminal()
         else:
-            # Default Movement keys: WASD, WASF, and diagonals
-            self.movement_keys = {
-                # WASD
-                "w": (0, -1),  # Up
-                "a": (-1, 0),  # Left
-                "s": (0, 1),  # Down
-                "d": (1, 0),  # Right
-                # WASF support (user requested)
-                "f": (1, 0),  # Right (if using WASF)
-                # Diagonals (using keys around WASD)
-                "q": (-1, -1),  # Up-left
-                "e": (1, -1),  # Up-right
-                "z": (-1, 1),  # Down-left
-                "c": (1, 1),  # Down-right
-            }
+            self.stdin_fd = None
+            self.old_settings = None
+            self.is_tty = False
 
-        if CONFIG.controls and "actions" in CONFIG.controls:
-            self.action_keys = CONFIG.controls["actions"]
-        else:
-            # Default Action keys
-            self.action_keys = {
-                " ": "action_menu",  # Space for action menu
-                "e": "select",  # 'e' for selection (common interact key)
-                "x": "select",  # 'x' for selection
-                "p": "quit",  # 'p' to quit (instead of 'q' which is now move)
-                "i": "inventory",  # Inventory
-                "I": "inventory",
-                "g": "pickup",  # Get/Pickup
-                "t": "fire",  # Target/Fire ranged weapon
-            }
-
-        # Store original terminal settings
-        self.original_settings = None
+        # Load controls
+        self.movement_map = CONFIG.controls.get("movement", {})
+        self.action_map = CONFIG.controls.get("actions", {})
 
     def setup_terminal(self):
-        """Setup terminal for non-blocking input."""
-        try:
-            self.original_settings = termios.tcgetattr(sys.stdin)
-            tty.setcbreak(sys.stdin)
-        except (termios.error, io.UnsupportedOperation):
-            # Handle cases where stdin is not a TTY (e.g., when running tests)
-            self.original_settings = None
+        """Setup terminal for raw input."""
+        if not self.is_tty:
+            return
+        new_settings = termios.tcgetattr(self.stdin_fd)
+        new_settings[3] = new_settings[3] & ~(termios.ECHO | termios.ICANON)
+        termios.tcsetattr(self.stdin_fd, termios.TCSADRAIN, new_settings)
 
     def restore_terminal(self):
         """Restore terminal to original settings."""
-        if self.original_settings:
-            try:
-                termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.original_settings)
-            except termios.error:
-                # Handle cases where stdin is not a TTY
-                pass
+        if not self.is_tty:
+            return
+        termios.tcsetattr(self.stdin_fd, termios.TCSADRAIN, self.old_settings)
 
-    def check_for_input(self) -> Optional[InputEvent]:
-        """
-        Check for input without blocking.
-        Returns an InputEvent if available, otherwise None.
-        """
-        if select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
-            key = sys.stdin.read(1)
-
-            # Handle Escape Sequences (Arrow Keys)
-            if key == "\x1b":
-                # Check if there's more data (non-blocking read for sequence)
-                if select.select([sys.stdin], [], [], 0.01) == ([sys.stdin], [], []):
-                    next1 = sys.stdin.read(1)
-                    if next1 == "[":
-                        if select.select([sys.stdin], [], [], 0.01) == (
-                            [sys.stdin],
-                            [],
-                            [],
-                        ):
-                            next2 = sys.stdin.read(1)
-                            if next2 == "A":
-                                return InputEvent("move", 0, -1)  # Up
-                            elif next2 == "B":
-                                return InputEvent("move", 0, 1)  # Down
-                            elif next2 == "C":
-                                return InputEvent("move", 1, 0)  # Right
-                            elif next2 == "D":
-                                return InputEvent("move", -1, 0)  # Left
-                return None
-
-            # Handle movement keys
-            if key in self.movement_keys:
-                dx, dy = self.movement_keys[key]
-                return InputEvent("move", dx, dy)
-
-            # Handle action keys
-            if key in self.action_keys:
-                action = self.action_keys[key]
-                if action == "quit":
-                    return InputEvent("quit")
-                elif action == "action_menu":
-                    return InputEvent("action_menu")
-                elif action == "select":
-                    return InputEvent("select")
-                elif action == "inventory":
-                    return InputEvent("inventory")
-                elif action == "pickup":
-                    return InputEvent("pickup")
-
+    def _map_key_to_event(self, key: str) -> Optional[InputEvent]:
+        """Map a raw key to an InputEvent."""
+        if not key:
             return None
 
+        # Check movement
+        if key in self.movement_map:
+            dx, dy = self.movement_map[key]
+            return InputEvent(
+                key=key, action_type="move", dx=dx, dy=dy, timestamp=time.time()
+            )
+
+        # Check actions
+        if key in self.action_map:
+            action = self.action_map[key]
+            return InputEvent(key=key, action_type=action, timestamp=time.time())
+
+        return InputEvent(key=key, action_type="unknown", timestamp=time.time())
+
+    def get_input_non_blocking(self) -> Optional[InputEvent]:
+        """Get input without blocking execution."""
+        if not self.is_tty:
+            return None
+
+        if select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
+            key = sys.stdin.read(1)
+            return self._map_key_to_event(key)
         return None
 
-    def wait_for_input(self) -> Optional[InputEvent]:
-        """
-        Wait for and return the next input event.
-        This is a blocking call.
-        """
-        # Read a single character
+    def check_for_input(self) -> Optional[InputEvent]:
+        """Alias for get_input_non_blocking to match GameEngine usage."""
+        return self.get_input_non_blocking()
+
+    def get_input_blocking(self) -> InputEvent:
+        """Get input blocking until a key is pressed."""
+        if not self.is_tty:
+            # Avoid hanging forever in tests
+            time.sleep(0.1)
+            return InputEvent(key="", timestamp=time.time())
+
         key = sys.stdin.read(1)
+        return self._map_key_to_event(key) or InputEvent(key="", timestamp=time.time())
 
-        # Handle movement keys
-        if key in self.movement_keys:
-            dx, dy = self.movement_keys[key]
-            return InputEvent("move", dx, dy)
-
-        # Handle action keys
-        if key in self.action_keys:
-            action = self.action_keys[key]
-            if action == "quit":
-                return InputEvent("quit")
-            elif action == "action_menu":
-                return InputEvent("action_menu")
-            elif action == "select":
-                return InputEvent("select")
-
-        # Return None for unrecognized keys
-        return None
-
-
-class InputBuffer:
-    """Buffer for storing and processing input events."""
-
-    def __init__(self):
-        self.buffer = []
-
-    def add_input(self, event: InputEvent):
-        """Add an input event to the buffer."""
-        self.buffer.append(event)
-
-    def get_next_event(self) -> Optional[InputEvent]:
-        """Get the next event from the buffer."""
-        if self.buffer:
-            return self.buffer.pop(0)
-        return None
-
-    def clear(self):
-        """Clear the input buffer."""
-        self.buffer.clear()
-
-    def has_events(self) -> bool:
-        """Check if there are events in the buffer."""
-        return len(self.buffer) > 0
+    def __del__(self):
+        """Cleanup when the handler is destroyed."""
+        self.restore_terminal()

@@ -9,7 +9,7 @@ chunk_size = 50
 max_chunks_loaded = 9
 world_width = 2000
 world_height = 2000
-target_fps = 30
+target_fps = 90
 max_frameskip = 5
 ai_move_delay = 0.5
 player_start_x = 25
@@ -22,15 +22,24 @@ save_dir = "src/data/saves"
 map_dir = "src/world"
 
 [controls.movement]
-w = [0, -1]  # Up
-a = [-1, 0]  # Left
-s = [0, 1]   # Down
-d = [1, 0]   # Right
-f = [1, 0]   # Right (WASF)
-q = [-1, -1] # Up-left
-e = [1, -1]  # Up-right
-z = [-1, 1]  # Down-left
-c = [1, 1]   # Down-right
+# Up
+w = [0, -1]
+# Left  
+a = [-1, 0]
+# Down
+s = [0, 1]
+# Right
+d = [1, 0]
+# Right (WASF)
+f = [1, 0]
+# Up-left
+q = [-1, -1]
+# Up-right
+e = [1, -1]
+# Down-left
+z = [-1, 1]
+# Down-right
+c = [1, 1]
 
 [controls.actions]
 " " = "action_menu"

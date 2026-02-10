@@ -54,7 +54,7 @@ class GameMap:
         # Visibility arrays - Default to fully visible (No Fog of War)
         self.explored = np.full((height, width), True, dtype=bool)
         self.visible = np.full((height, width), True, dtype=bool)
-        
+
         # Start position (x, y) if defined in map data
         self.start_position: Optional[Tuple[int, int]] = None
 
@@ -153,6 +153,21 @@ class GameMap:
                 return tile_def.fg_color
         return (0, 0, 0)
 
+    def get_tile_bg_color(
+        self, x: int, y: int, visible: bool = True
+    ) -> Optional[Tuple[int, int, int]]:
+        """Get the background color of a tile."""
+        if 0 <= x < self.width and 0 <= y < self.height:
+            tile_def = self.tile_definitions[self.tiles[y, x]]
+            
+            if not visible and self.explored[y, x]:
+                if tile_def.bg_color:
+                    r, g, b = tile_def.bg_color
+                    return (max(0, r - 100), max(0, g - 100), max(0, b - 100))
+                return None
+            return tile_def.bg_color
+        return None
+
     def update_fov(self, fov_array: np.ndarray):
         """Update the visibility and exploration status based on FOV."""
         # FOV disabled: Keep everything visible
@@ -240,7 +255,7 @@ class GameMap:
             for x, char in enumerate(row):
                 if x >= self.width:
                     break
-                
+
                 if char == "@":
                     self.start_position = (x, y)
                     self.tiles[y, x] = TILE_FLOOR
