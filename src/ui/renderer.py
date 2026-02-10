@@ -591,7 +591,9 @@ class Renderer:
 
     def _output_buffer(self, buffer: np.ndarray):
         """Output the render buffer to the terminal using incremental updates."""
-        # Hide cursor
+        import sys
+        
+        # Hide cursor (ensure it stays hidden)
         output_parts = ["\033[?25l"]
 
         # Optimization: Cache last color to reduce escape codes
@@ -600,7 +602,7 @@ class Renderer:
 
         # Track virtual cursor position to avoid redundant moves
         v_cursor_y = -1
-        v_cursor_x = -1
+        v_cursor_x = -1 # Tracks buffer X index (not screen column)
 
         rows, cols = buffer.shape
 
@@ -617,9 +619,9 @@ class Renderer:
                 prev_fg = tuple(self.previous_fg_buffer[y, x])
                 prev_bg = tuple(self.previous_bg_buffer[y, x])
 
-                # Check if tile changed
+                # Check if tile changed (Force redraw if we need to jump cursor anyway? No.)
                 if char != prev_char or fg != prev_fg or bg != prev_bg:
-                    # Target screen column
+                    # Target screen column (1-based)
                     screen_col = x * 2 + 1
 
                     # Skip if would exceed terminal width
@@ -627,6 +629,8 @@ class Renderer:
                         continue
 
                     # Move cursor if not at the current tile
+                    # We expect the cursor to be at the start of this cell (screen_col)
+                    # The previous print operation left the cursor at previous_screen_col + 2
                     if y != v_cursor_y or x != v_cursor_x:
                         output_parts.append(f"\033[{y+1};{screen_col}H")
 
@@ -660,9 +664,12 @@ class Renderer:
         self.previous_fg_buffer[:rows, :cols] = self.fg_color_buffer[:rows, :cols]
         self.previous_bg_buffer[:rows, :cols] = self.bg_color_buffer[:rows, :cols]
 
-        # Reset colors and flush
+        # Reset colors (but keep cursor hidden)
         output_parts.append("\033[0m")
-        print("".join(output_parts), end="", flush=True)
+        
+        # Use sys.stdout.write for better performance on some terminals
+        sys.stdout.write("".join(output_parts))
+        sys.stdout.flush()
 
     def render_simple_map(self, game_map: "GameMap"):
         """Simple map rendering for debugging."""
