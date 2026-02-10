@@ -1,0 +1,15 @@
+{
+    "xp_curve": {
+        "base_xp": 100,
+        "exponent": 1.5
+    },
+    "stat_growth": {
+        "hp_per_level": 20,
+        "attack_per_level": 2,
+        "defense_per_level": 1
+    },
+    "skill_xp_curve": {
+        "base_xp": 50,
+        "factor": 10
+    }
+}

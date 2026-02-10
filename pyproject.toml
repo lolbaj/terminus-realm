@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "terminus-realm"
+version = "0.1.0"
+description = "Terminus Realm: A mobile-optimized roguelike game"
+authors = ["Your Name <your.email@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+numpy = "^1.21.0"
+pydantic = "^1.8.0"
+rich = "^10.0.0"
+blessed = "^1.19.0"
+numba = "^0.55.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^6.0"
+black = "^22.0.0"
+flake8 = "^4.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
