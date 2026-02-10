@@ -593,20 +593,18 @@ class Renderer:
         """Output the render buffer to the terminal using incremental updates."""
         import sys
         
-        # Hide cursor (ensure it stays hidden)
+        # Hide cursor
         output_parts = ["\033[?25l"]
 
-        # Optimization: Cache last color to reduce escape codes
+        # Cache last color to reduce escape codes
         last_fg = (-1, -1, -1)
         last_bg = (-1, -1, -1)
 
-        # Track virtual cursor position to avoid redundant moves
+        # Track virtual cursor position
         v_cursor_y = -1
-        v_cursor_x = -1 # Tracks buffer X index (not screen column)
+        v_cursor_x = -1
 
         rows, cols = buffer.shape
-
-        # Max terminal columns safety
         max_cols = shutil.get_terminal_size().columns
 
         for y in range(rows):
@@ -619,7 +617,7 @@ class Renderer:
                 prev_fg = tuple(self.previous_fg_buffer[y, x])
                 prev_bg = tuple(self.previous_bg_buffer[y, x])
 
-                # Check if tile changed (Force redraw if we need to jump cursor anyway? No.)
+                # Check if cell changed or if we need to force sync
                 if char != prev_char or fg != prev_fg or bg != prev_bg:
                     # Target screen column (1-based)
                     screen_col = x * 2 + 1
@@ -628,13 +626,11 @@ class Renderer:
                     if screen_col + 1 > max_cols:
                         continue
 
-                    # Move cursor if not at the current tile
-                    # We expect the cursor to be at the start of this cell (screen_col)
-                    # The previous print operation left the cursor at previous_screen_col + 2
+                    # Move cursor if drift detected or new line
                     if y != v_cursor_y or x != v_cursor_x:
                         output_parts.append(f"\033[{y+1};{screen_col}H")
 
-                    # Update colors if changed
+                    # Update foreground color
                     if fg != last_fg:
                         if fg[0] == -1:
                             output_parts.append("\033[39m")
@@ -642,6 +638,7 @@ class Renderer:
                             output_parts.append(f"\033[38;2;{fg[0]};{fg[1]};{fg[2]}m")
                         last_fg = fg
 
+                    # Update background color
                     if bg != last_bg:
                         if bg[0] == -1:
                             output_parts.append("\033[49m")
@@ -649,25 +646,36 @@ class Renderer:
                             output_parts.append(f"\033[48;2;{bg[0]};{bg[1]};{bg[2]}m")
                         last_bg = bg
 
-                    # Render (ensuring 2-char width)
-                    if len(char) == 1 and ord(char) < 128:
-                        output_parts.append(char + " ")
-                    else:
+                    # Render and enforce 2-column width
+                    # Python len() counts characters; we need to handle emojis (width 2) 
+                    # vs ASCII (width 1).
+                    if len(char) == 1:
+                        if ord(char) > 126:
+                            # Emoji or Unicode - assume width 2 (Standard for most modern terms)
+                            output_parts.append(char)
+                            # Emojis often cause drift; force a cursor move for the next cell
+                            v_cursor_x = -1 
+                        else:
+                            # Standard ASCII - pad to width 2
+                            output_parts.append(char + " ")
+                            v_cursor_x = x + 1
+                    elif len(char) == 2:
                         output_parts.append(char)
+                        v_cursor_x = x + 1
+                    else:
+                        # Fallback for weird cases
+                        output_parts.append(char[:2])
+                        v_cursor_x = -1
 
-                    # Update virtual cursor
                     v_cursor_y = y
-                    v_cursor_x = x + 1
 
         # Save state
         self.previous_frame[:rows, :cols] = buffer
         self.previous_fg_buffer[:rows, :cols] = self.fg_color_buffer[:rows, :cols]
         self.previous_bg_buffer[:rows, :cols] = self.bg_color_buffer[:rows, :cols]
 
-        # Reset colors (but keep cursor hidden)
+        # Reset state and flush
         output_parts.append("\033[0m")
-        
-        # Use sys.stdout.write for better performance on some terminals
         sys.stdout.write("".join(output_parts))
         sys.stdout.flush()
 
