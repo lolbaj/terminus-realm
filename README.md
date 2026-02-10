@@ -47,7 +47,10 @@ python src/main.py
 | `h`, `j`, `k`, `l` | Move West, South, North, East |
 | `y`, `u`, `b`, `n` | Move NW, NE, SW, SE |
 | `Space` | Open Command Menu |
-| `Enter` | Select Menu Option |
+| `Enter` / `e` | Select / Interact |
+| `i` | Inventory |
+| `g` | Pickup Item |
+| `t` | Fire Ranged Weapon |
 
 ## Architecture
 
@@ -58,9 +61,9 @@ python src/main.py
 ## Development Roadmap
 
 - [x] **Phase 0-1:** Foundation & Movement
-- [ ] **Phase 2:** Field of View & Visibility
-- [ ] **Phase 3:** World Expansion & Procedural Generation
-- [ ] **Phase 4:** Advanced AI & Combat Systems
+- [x] **Phase 2:** Field of View & Visibility
+- [x] **Phase 3:** World Expansion & Procedural Generation
+- [ ] **Phase 4:** Advanced AI & Combat Systems (In Progress)
 - [ ] **Phase 5:** Polish, Sound, and Optimization
 
 ---
