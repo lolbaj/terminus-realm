@@ -27,7 +27,10 @@ def load_static_chunks() -> Dict[Tuple[int, int], List[str]]:
             layout = map_entry.get("layout")
             
             if x is not None and y is not None and layout:
-                # TOML list of strings to Python list of strings
+                # Handle multi-line string format
+                if isinstance(layout, str):
+                    layout = layout.strip().split('\n')
+                
                 static_chunks[(x, y)] = layout
                 
         print(f"Loaded {len(static_chunks)} static map chunks from config.")
