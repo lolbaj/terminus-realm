@@ -44,13 +44,15 @@ python src/main.py
 
 | Key | Action |
 |-----|--------|
-| `h`, `j`, `k`, `l` | Move West, South, North, East |
-| `y`, `u`, `b`, `n` | Move NW, NE, SW, SE |
+| `w`, `a`, `s`, `d` | Move North, West, South, East |
+| `q`, `e`, `z`, `c` | Move NW, NE, SW, SE |
+| `Arrows` | Move N, S, E, W |
 | `Space` | Open Command Menu |
-| `Enter` / `e` | Select / Interact |
+| `x` / `e` | Select / Interact |
 | `i` | Inventory |
 | `g` | Pickup Item |
 | `t` | Fire Ranged Weapon |
+| `p` | Quit Game |
 
 ## Architecture
 
