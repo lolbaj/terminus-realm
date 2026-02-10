@@ -92,6 +92,9 @@ class PersistentWorld:
         self.biome_map: Optional[np.ndarray] = None
         self.area_map: Optional[np.ndarray] = None  # Maps each tile to its area type
         self.world_file = "src/data/saves/persistent_world.pkl"
+        
+        # Player start position from static maps
+        self.player_start_pos: Optional[Tuple[int, int]] = None
 
         # Create saves directory if it doesn't exist
         os.makedirs(os.path.dirname(self.world_file), exist_ok=True)
@@ -222,6 +225,12 @@ class PersistentWorld:
                     wy = start_y + r
 
                     if 0 <= wx < self.world_width and 0 <= wy < self.world_height:
+                        
+                        # Handle Player Start
+                        if char == "@":
+                            self.player_start_pos = (wx, wy)
+                            char = "." # Treat as floor
+
                         # Set biome to town for town-like tiles, or special biomes
                         if char in ("#", ".", "+", "P"):
                             self.biome_map[wy, wx] = "town"
@@ -338,6 +347,7 @@ class PersistentWorld:
                     self.areas = data["areas"]
                     self.world_width = data["world_width"]
                     self.world_height = data["world_height"]
+                    self.player_start_pos = data.get("player_start_pos")
                     self.center_x = self.world_width // 2
                     self.center_y = self.world_height // 2
                     print(
@@ -359,6 +369,7 @@ class PersistentWorld:
             "world_width": self.world_width,
             "world_height": self.world_height,
             "world_seed": self.world_seed,
+            "player_start_pos": self.player_start_pos,
         }
         with open(self.world_file, "wb") as f:
             pickle.dump(data, f)
