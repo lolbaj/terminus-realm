@@ -25,36 +25,45 @@ class InputHandler:
     """Handles keyboard input for the game."""
 
     def __init__(self):
-        # Movement keys: WASD, WASF, and diagonals
-        self.movement_keys = {
-            # WASD
-            "w": (0, -1),  # Up
-            "a": (-1, 0),  # Left
-            "s": (0, 1),  # Down
-            "d": (1, 0),  # Right
-            # WASF support (user requested)
-            "f": (1, 0),  # Right (if using WASF)
-            # Diagonals (using keys around WASD)
-            "q": (-1, -1),  # Up-left
-            "e": (
-                1,
-                -1,
-            ),  # Up-right (Note: 'e' is also used for select below, but we'll prioritize movement if it's here)
-            "z": (-1, 1),  # Down-left
-            "c": (1, 1),  # Down-right
-        }
+        from config import CONFIG
+        
+        # Load controls from config or use defaults
+        if CONFIG.controls and "movement" in CONFIG.controls:
+            # Convert list coords to tuples for internal logic
+            self.movement_keys = {
+                k: tuple(v) for k, v in CONFIG.controls["movement"].items()
+            }
+        else:
+            # Default Movement keys: WASD, WASF, and diagonals
+            self.movement_keys = {
+                # WASD
+                "w": (0, -1),  # Up
+                "a": (-1, 0),  # Left
+                "s": (0, 1),  # Down
+                "d": (1, 0),  # Right
+                # WASF support (user requested)
+                "f": (1, 0),  # Right (if using WASF)
+                # Diagonals (using keys around WASD)
+                "q": (-1, -1),  # Up-left
+                "e": (1, -1),  # Up-right
+                "z": (-1, 1),  # Down-left
+                "c": (1, 1),  # Down-right
+            }
 
-        # Action keys
-        self.action_keys = {
-            " ": "action_menu",  # Space for action menu
-            "e": "select",  # 'e' for selection (common interact key)
-            "x": "select",  # 'x' for selection
-            "p": "quit",  # 'p' to quit (instead of 'q' which is now move)
-            "i": "inventory",  # Inventory
-            "I": "inventory",
-            "g": "pickup",  # Get/Pickup
-            "t": "fire",  # Target/Fire ranged weapon
-        }
+        if CONFIG.controls and "actions" in CONFIG.controls:
+            self.action_keys = CONFIG.controls["actions"]
+        else:
+            # Default Action keys
+            self.action_keys = {
+                " ": "action_menu",  # Space for action menu
+                "e": "select",  # 'e' for selection (common interact key)
+                "x": "select",  # 'x' for selection
+                "p": "quit",  # 'p' to quit (instead of 'q' which is now move)
+                "i": "inventory",  # Inventory
+                "I": "inventory",
+                "g": "pickup",  # Get/Pickup
+                "t": "fire",  # Target/Fire ranged weapon
+            }
 
         # Store original terminal settings
         self.original_settings = None

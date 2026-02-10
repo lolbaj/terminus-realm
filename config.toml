@@ -1,0 +1,43 @@
+# Terminus Realm Configuration File
+
+[game]
+title = "Terminus Realm"
+version = "0.1.0"
+screen_width = 80
+screen_height = 25
+chunk_size = 50
+max_chunks_loaded = 9
+world_width = 2000
+world_height = 2000
+target_fps = 30
+max_frameskip = 5
+ai_move_delay = 0.5
+player_start_x = 25
+player_start_y = 25
+max_player_hp = 100
+
+[paths]
+tiles_file = "src/data/static/tiles.json"
+save_dir = "src/data/saves"
+map_dir = "src/world"
+
+[controls.movement]
+w = [0, -1]  # Up
+a = [-1, 0]  # Left
+s = [0, 1]   # Down
+d = [1, 0]   # Right
+f = [1, 0]   # Right (WASF)
+q = [-1, -1] # Up-left
+e = [1, -1]  # Up-right
+z = [-1, 1]  # Down-left
+c = [1, 1]   # Down-right
+
+[controls.actions]
+" " = "action_menu"
+e = "select"
+x = "select"
+p = "quit"
+i = "inventory"
+I = "inventory"
+g = "pickup"
+t = "fire"
