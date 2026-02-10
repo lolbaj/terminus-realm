@@ -2,7 +2,7 @@
 # Layouts use multi-line strings for easy editing.
 
 [[maps]]
-x = 0
+name = "Town Center"x = 0
 y = 0
 layout = """
 TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
@@ -58,7 +58,7 @@ TTTTTTTTTTTTTTTTTTTTTTT....TTTTTTTTTTTTTTTTTTTTTTT
 """
 
 [[maps]]
-x = 0
+name = "South Forest"x = 0
 y = 1
 layout = """
 TTTTTTTTTTTTTTTTTTTTTTT....TTTTTTTTTTTTTTTTTTTTTTT
@@ -114,7 +114,7 @@ TTTTTTTTTTTTTTTTTTTT,,,....,,,TTTTTTTTTTTTTTTTTTTT
 """
 
 [[maps]]
-x = 1
+name = "East Camp"x = 1
 y = 0
 layout = """
 TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
@@ -170,7 +170,7 @@ TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 """
 
 [[maps]]
-x = 0
+name = "Claude's Town"x = 0
 y = -1
 layout = """
 ########################################
@@ -201,7 +201,7 @@ layout = """
 """
 
 [[maps]]
-x = -1
+name = "Claude's Forest"x = -1
 y = 0
 layout = """
 ########################################
@@ -231,7 +231,7 @@ layout = """
 """
 
 [[maps]]
-x = -1
+name = "Claude's Dungeon"x = -1
 y = 1
 layout = """
 ########################################
@@ -261,7 +261,7 @@ layout = """
 """
 
 [[maps]]
-x = 1
+name = "Claude's Desert Temple"x = 1
 y = 1
 layout = """
 ########################################
@@ -291,7 +291,7 @@ layout = """
 """
 
 [[maps]]
-x = 0
+name = "Gemini's Frozen Palace"x = 0
 y = -2
 layout = """
 #################################################################
@@ -340,7 +340,7 @@ layout = """
 """
 
 [[maps]]
-x = 0
+name = "Gemini's Volcanic Temple"x = 0
 y = 2
 layout = """
 ######################################################################
@@ -391,7 +391,7 @@ layout = """
 """
 
 [[maps]]
-x = -2
+name = "Gemini's Enchanted Forest"x = -2
 y = 0
 layout = """
 #################################################################
@@ -437,7 +437,7 @@ layout = """
 """
 
 [[maps]]
-x = 2
+name = "Gemini's Library"x = 2
 y = 0
 layout = """
 ###########################################################################
@@ -493,7 +493,7 @@ layout = """
 """
 
 [[maps]]
-x = -2
+name = "Gemini's Cavern"x = -2
 y = -2
 layout = """
 ######################################################################
@@ -544,7 +544,7 @@ layout = """
 """
 
 [[maps]]
-x = 2
+name = "Gemini's Ruins"x = 2
 y = 2
 layout = """
 ######################################################################
@@ -598,7 +598,7 @@ layout = """
 """
 
 [[maps]]
-x = 1
+name = "Gemini's Oasis"x = 1
 y = -1
 layout = """
 #################################################################
@@ -649,7 +649,7 @@ layout = """
 """
 
 [[maps]]
-x = -1
+name = "Gemini's Castle"x = -1
 y = -1
 layout = """
 ############################################################
