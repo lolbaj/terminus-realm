@@ -506,12 +506,6 @@ class MapEditor:
             if self._handle_mouse_palette(term_x, term_y):
                 return
 
-            # 2. Minimap Interaction
-            if self.minimap.handle_mouse(
-                term_x, term_y, self.viewport_width, self.viewport_height
-            ):
-                return
-
             # 3. Map Drawing Interaction
             self._handle_mouse_draw(btn, mx, my, is_release)
 

@@ -321,11 +321,6 @@ class InputHandler:
             self.editor.status_message = (
                 f"Auto-tiling {'ON' if self.editor.map_mgr.auto_tiling else 'OFF'}."
             )
-        elif k == "\x17":  # Ctrl+W
-            self.editor.minimap.visible = not self.editor.minimap.visible
-            self.editor.status_message = (
-                f"Minimap {'ON' if self.editor.minimap.visible else 'OFF'}."
-            )
         elif k == "\x02":  # Ctrl+B
             self.editor.mode = EditorMode.BROWSE
             self.editor.browser_idx = self.editor.map_mgr.current_index
