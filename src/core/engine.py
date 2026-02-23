@@ -32,6 +32,10 @@ class GameEngine:
         self.frame_duration = 1.0 / self.target_fps
         self.fixed_timestep = 1.0 / CONFIG.target_fps
 
+        # Override configurations for testing
+        self.override_map_path: Optional[str] = None
+        self.override_start_pos: Optional[tuple[int, int]] = None
+
         # Initialize game components
         self.game_map: Optional[GameMap] = None
         self.entity_wrapper = EntityManagerWrapper(self.entity_manager)
@@ -137,24 +141,92 @@ class GameEngine:
         """Initialize game state."""
         print("Initializing game...")
 
-        # Get the persistent world
-        from world.persistent_world import get_persistent_world
+        if self.override_map_path:
+            # Load specific map for testing
+            try:
+                import toml
+                from world.map import GameMap
 
-        persistent_world = get_persistent_world()
+                with open(self.override_map_path, "r") as f:
+                    data = toml.load(f)
 
-        # Load the FULL world map for seamless scrolling
-        self.game_map = persistent_world.get_full_game_map()
-        print("Loaded Full World Map")
+                maps = data.get("maps", [])
+                if not maps:
+                    raise ValueError("No maps found in file")
 
-        # Start player
-        if persistent_world.player_start_pos:
-             start_x, start_y = persistent_world.player_start_pos
+                # Assume first map for now or we could add another arg for map name
+                m_data = maps[0]
+                layout = m_data["layout"].strip().split("\n")
+                h = len(layout)
+                w = max(len(row) for row in layout) if h > 0 else 0
+
+                self.game_map = GameMap(w, h)
+
+                # Char mapping
+                # TODO: Centralize this mapping
+                char_map = {
+                    ".": 0,
+                    " ": 0,  # Floor
+                    "#": 1,  # Wall
+                    "+": 2,  # Door
+                    "~": 3,  # Water
+                    ",": 4,  # Grass
+                    "T": 5,  # Tree
+                    "S": 8,  # Sand
+                    "P": 9,  # Pavement
+                    "*": 10,  # Snow
+                    "=": 11,  # Lava
+                    "A": 12,  # Ash
+                    "C": 13,  # Cactus
+                    "I": 14,  # Ice
+                }
+
+                for y, row in enumerate(layout):
+                    for x, char in enumerate(row):
+                        if x < w:
+                            tid = char_map.get(char, 0)  # Default to floor
+                            # Handle special characters
+                            if char in "║═╚╔╗╝╠╦╣╩╬█":
+                                tid = 1
+                            elif char == "@":
+                                self.override_start_pos = (x, y)
+                                tid = 0
+
+                            self.game_map.tiles[y, x] = tid
+
+                print(f"Loaded Test Map: {m_data.get('name', 'Untitled')}")
+                start_x, start_y = (
+                    self.override_start_pos
+                    if self.override_start_pos
+                    else (w // 2, h // 2)
+                )
+
+            except Exception as e:
+                print(f"Failed to load test map: {e}")
+                import sys
+
+                sys.exit(1)
         else:
-             # Fallback: Start player in the center of the Town (Chunk 0,0)
-             start_x = persistent_world.center_x + 25
-             start_y = persistent_world.center_y + 25
+            # Get the persistent world
+            from world.persistent_world import get_persistent_world
 
-        # Ensure we don't spawn in a wall
+            persistent_world = get_persistent_world()
+
+            # Load the FULL world map for seamless scrolling
+            self.game_map = persistent_world.get_full_game_map()
+            print("Loaded Full World Map")
+
+            # Start player
+            if self.override_start_pos:
+                start_x, start_y = self.override_start_pos
+            elif persistent_world.player_start_pos:
+                start_x, start_y = persistent_world.player_start_pos
+            else:
+                # Fallback: Start player in the center of the Town (Chunk 0,0)
+                start_x = persistent_world.center_x + 25
+                start_y = persistent_world.center_y + 25
+
+            # Ensure we don't spawn in a wall
         # Spiral search for free spot
         found = False
         for r in range(0, 50):
@@ -509,6 +581,7 @@ class GameEngine:
             Health,
             Item,
             WeaponStats,
+            ArmorStats,
             Equipment,
         )
 
@@ -552,14 +625,63 @@ class GameEngine:
             # Equip it
             equip = self.entity_manager.get_component(self.player_id, Equipment)
             if equip:
-                equip.weapon = item_comp.name
+                # Unequip old weapon if any
+                if equip.weapon is not None:
+                    old_weapon_name = "Unknown"
+                    old_item = self.entity_manager.get_component(equip.weapon, Item)
+                    if old_item:
+                        old_weapon_name = old_item.name
+
+                    player_inv.items.append(equip.weapon)
+                    self.log(f"Unequipped {old_weapon_name}.", (200, 200, 200))
+
+                # Remove new weapon from inventory
+                player_inv.items.pop(self.inventory_selection)
+
+                # Equip new weapon
+                equip.weapon = item_id
                 equip.weapon_type = weapon_stats.weapon_type
-                # Update combat stats? Not needed since damage is skill based + stats
-                # But we might want to store the actual weapon ID later
+
                 self.log(
                     f"Equipped {item_comp.name} ({weapon_stats.weapon_type}).",
                     (100, 200, 255),
                 )
+
+                # Adjust selection
+                if self.inventory_selection >= len(player_inv.items):
+                    self.inventory_selection = max(0, len(player_inv.items) - 1)
+            return
+
+        # Check for Armor
+        armor_stats = self.entity_manager.get_component(item_id, ArmorStats)
+        if armor_stats:
+            # Equip it
+            equip = self.entity_manager.get_component(self.player_id, Equipment)
+            if equip:
+                # Unequip old armor if any
+                if equip.armor is not None:
+                    old_armor_name = "Unknown"
+                    old_item = self.entity_manager.get_component(equip.armor, Item)
+                    if old_item:
+                        old_armor_name = old_item.name
+
+                    player_inv.items.append(equip.armor)
+                    self.log(f"Unequipped {old_armor_name}.", (200, 200, 200))
+
+                # Remove new armor from inventory
+                player_inv.items.pop(self.inventory_selection)
+
+                # Equip new armor
+                equip.armor = item_id
+
+                self.log(
+                    f"Equipped {item_comp.name} (+{armor_stats.defense} Def).",
+                    (100, 200, 255),
+                )
+
+                # Adjust selection
+                if self.inventory_selection >= len(player_inv.items):
+                    self.inventory_selection = max(0, len(player_inv.items) - 1)
             return
 
         self.log(f"You can't use {item_comp.name}.", (150, 150, 150))
@@ -641,6 +763,9 @@ class GameEngine:
             Player,
             Skills,
             Equipment,
+            WeaponStats,
+            ArmorStats,
+            Item,
         )
 
         # Get components
@@ -656,28 +781,59 @@ class GameEngine:
         # Determine Attack Power based on Weapon Type
         attack_power = 1
         skill_used = "melee"
+        weapon_affixes = []
 
         if attacker_skills:
-            if attacker_equip:
-                skill_used = attacker_equip.weapon_type
+            # Check equipped weapon stats
+            if attacker_equip and attacker_equip.weapon:
+                weapon_stats = self.entity_manager.get_component(
+                    attacker_equip.weapon, WeaponStats
+                )
+                if weapon_stats:
+                    attack_power += weapon_stats.attack_power
+                    skill_used = weapon_stats.weapon_type
+
+                # Check for item affixes if needed later (e.g., life steal)
+                weapon_item = self.entity_manager.get_component(
+                    attacker_equip.weapon, Item
+                )
+                if weapon_item and weapon_item.affixes:
+                    weapon_affixes = weapon_item.affixes
 
             if skill_used == "melee":
-                attack_power = attacker_skills.melee
+                attack_power += attacker_skills.melee
             elif skill_used == "distance":
-                attack_power = attacker_skills.distance
+                attack_power += attacker_skills.distance
             elif skill_used == "magic":
-                attack_power = attacker_skills.magic
+                attack_power += attacker_skills.magic
         else:
             # Fallback for entities without Skills component (basic monsters)
             attacker_combat = self.entity_manager.get_component(attacker_id, Combat)
             if attacker_combat:
                 attack_power = attacker_combat.attack_power
 
+        # Apply Special Effects (Damage)
+        if "Flaming" in weapon_affixes:
+            attack_power += 5
+            self.log("Flaming weapon burns!", (255, 100, 0))
+        elif "Frozen" in weapon_affixes:
+            attack_power += 3
+            self.log("Frozen weapon chills!", (100, 200, 255))
+
         # Determine Defense (Stat based, not skill)
         defense_power = 0
         defender_combat = self.entity_manager.get_component(defender_id, Combat)
         if defender_combat:
             defense_power = defender_combat.defense
+
+        # Add Armor Defense
+        defender_equip = self.entity_manager.get_component(defender_id, Equipment)
+        if defender_equip and defender_equip.armor:
+            armor_stats = self.entity_manager.get_component(
+                defender_equip.armor, ArmorStats
+            )
+            if armor_stats:
+                defense_power += armor_stats.defense
 
         # Calculate Damage
         # Rucoy logic: damage isn't just subtraction, but let's keep it simple for now
@@ -688,6 +844,16 @@ class GameEngine:
         damage = max(0, attack_power - (defense_power // 2) + variance)
 
         defender_health.current -= damage
+
+        # Apply Vampiric Effect
+        if "Vampiric" in weapon_affixes and damage > 0:
+            attacker_health = self.entity_manager.get_component(attacker_id, Health)
+            if attacker_health:
+                heal = max(1, damage // 3)  # Heal 33% of damage
+                attacker_health.current = min(
+                    attacker_health.maximum, attacker_health.current + heal
+                )
+                self.log(f"Vampiric drain: +{heal} HP", (255, 50, 50))
 
         attacker_name = (
             "Player"

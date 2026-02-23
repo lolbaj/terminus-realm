@@ -17,7 +17,22 @@ def main():
     print("Starting the Roguelike Game...")
 
     # Initialize the game engine
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--map", help="Path to map file to load (overrides default)")
+    parser.add_argument("--pos", help="Starting position x,y")
+    args = parser.parse_args()
+
     engine = GameEngine()
+    if args.map:
+        engine.override_map_path = args.map
+    if args.pos:
+        try:
+            x, y = map(int, args.pos.split(","))
+            engine.override_start_pos = (x, y)
+        except ValueError:
+            print("Invalid position format. Use x,y")
 
     # Start the main game loop
     try:

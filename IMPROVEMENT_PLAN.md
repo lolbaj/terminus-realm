@@ -3,11 +3,12 @@
 ## Phase 1: Gameplay Depth (The "RPG" Feel)
 Focus: Making combat and progression satisfying.
 
-- [ ] **Loot 2.0 (Rarity & Affixes):**
+- [x] **Loot 2.0 (Rarity & Affixes):**
     - Items currently have fixed stats.
     - **Goal:** Generate items with prefixes/suffixes.
     - Example: `Sharp Iron Sword` (+2 Atk) or `Vampiric Bow` (Heal on hit).
     - Add color coding: Grey (Common), Blue (Rare), Purple (Epic), Gold (Legendary).
+    - **Implementation:** Added `Equipment` system using Entity IDs, allowing full stat/affix tracking. Added "Vampiric", "Flaming", "Frozen" special effects.
 
 - [ ] **Active Skills System:**
     - Currently, different classes just use different ranges.

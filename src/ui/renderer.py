@@ -456,13 +456,37 @@ class Renderer:
             if start_x + 2 + i < buffer_w:
                 buffer[start_y, start_x + 2 + i] = char
 
+        # Display Equipped Items
+        equip = entity_manager.get_component(player_id, Equipment)
+        equip_y = start_y + 2
+
+        if equip:
+            weapon_name = "None"
+            if equip.weapon:
+                w_item = entity_manager.get_component(equip.weapon, Item)
+                if w_item:
+                    weapon_name = w_item.name
+
+            armor_name = "None"
+            if equip.armor:
+                a_item = entity_manager.get_component(equip.armor, Item)
+                if a_item:
+                    armor_name = a_item.name
+
+            equip_text = f"Equipped: {weapon_name} / {armor_name}"
+            for i, char in enumerate(equip_text):
+                if start_x + 2 + i < buffer_w:
+                    buffer[equip_y, start_x + 2 + i] = char
+                    self.fg_color_buffer[equip_y, start_x + 2 + i] = (100, 200, 255)
+
+            equip_y += 2  # Add spacing
+
         # List Items
         inv = entity_manager.get_component(player_id, Inventory)
-        equip = entity_manager.get_component(player_id, Equipment)
 
         if inv:
             for i, item_id in enumerate(inv.items):
-                item_y = start_y + 2 + i
+                item_y = equip_y + i
                 if item_y >= start_y + win_h - 1:
                     break
 
@@ -470,15 +494,9 @@ class Renderer:
                 if not item_comp:
                     continue
 
-                # Check if equipped
-                is_equipped = False
-                if equip and equip.weapon == item_comp.name:  # Simplified check
-                    is_equipped = True
-
                 # Draw Item Name
                 prefix = "> " if i == selection else "  "
-                suffix = " (E)" if is_equipped else ""
-                name = f"{prefix}{item_comp.char} {item_comp.name}{suffix}"
+                name = f"{prefix}{item_comp.char} {item_comp.name}"
 
                 color = item_comp.color
                 if i == selection:
@@ -502,7 +520,7 @@ class Renderer:
                     buffer[by, bx] = char
                     self.fg_color_buffer[by, bx] = (150, 150, 150)
         else:
-            buffer[start_y + 2, start_x + 2] = "No Inventory Component!"
+            buffer[equip_y, start_x + 2] = "No Inventory Component!"
 
     def _render_ui(
         self,
@@ -592,7 +610,7 @@ class Renderer:
     def _output_buffer(self, buffer: np.ndarray):
         """Output the render buffer to the terminal using incremental updates."""
         import sys
-        
+
         # Hide cursor
         output_parts = ["\033[?25l"]
 
@@ -647,14 +665,14 @@ class Renderer:
                         last_bg = bg
 
                     # Render and enforce 2-column width
-                    # Python len() counts characters; we need to handle emojis (width 2) 
+                    # Python len() counts characters; we need to handle emojis (width 2)
                     # vs ASCII (width 1).
                     if len(char) == 1:
                         if ord(char) > 126:
                             # Emoji or Unicode - assume width 2 (Standard for most modern terms)
                             output_parts.append(char)
                             # Emojis often cause drift; force a cursor move for the next cell
-                            v_cursor_x = -1 
+                            v_cursor_x = -1
                         else:
                             # Standard ASCII - pad to width 2
                             output_parts.append(char + " ")

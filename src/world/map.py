@@ -2,7 +2,6 @@ import numpy as np
 from typing import Tuple, Optional
 from data.loader import DATA_LOADER
 
-
 # Tile types represented as integers for memory efficiency
 TILE_FLOOR = 0
 TILE_WALL = 1
@@ -54,7 +53,7 @@ class GameMap:
         # Visibility arrays - Default to fully visible (No Fog of War)
         self.explored = np.full((height, width), True, dtype=bool)
         self.visible = np.full((height, width), True, dtype=bool)
-        
+
         # Start position (x, y) if defined in map data
         self.start_position: Optional[Tuple[int, int]] = None
 
@@ -232,6 +231,19 @@ class GameMap:
             "A": TILE_ASH,
             "C": TILE_CACTUS,
             "I": TILE_ICE,
+            # Box drawing walls
+            "║": TILE_WALL,
+            "═": TILE_WALL,
+            "╚": TILE_WALL,
+            "╔": TILE_WALL,
+            "╗": TILE_WALL,
+            "╝": TILE_WALL,
+            "╠": TILE_WALL,
+            "╦": TILE_WALL,
+            "╣": TILE_WALL,
+            "╩": TILE_WALL,
+            "╬": TILE_WALL,
+            "█": TILE_WALL,
         }
 
         for y, row in enumerate(map_data):
@@ -240,7 +252,7 @@ class GameMap:
             for x, char in enumerate(row):
                 if x >= self.width:
                     break
-                
+
                 if char == "@":
                     self.start_position = (x, y)
                     self.tiles[y, x] = TILE_FLOOR

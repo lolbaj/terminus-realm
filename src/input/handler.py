@@ -26,7 +26,7 @@ class InputHandler:
 
     def __init__(self):
         from config import CONFIG
-        
+
         # Load controls from config or use defaults
         if CONFIG.controls and "movement" in CONFIG.controls:
             # Convert list coords to tuples for internal logic

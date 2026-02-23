@@ -145,11 +145,11 @@ class Inventory(Component):
 
 @dataclass(slots=True)
 class Equipment(Component):
-    """Equipment component for entities."""
+    """Equipment component for entities. Stores Entity IDs of equipped items."""
 
-    weapon: Optional[str] = None
+    weapon: Optional[int] = None
     weapon_type: str = "melee"  # melee, distance, magic
-    armor: Optional[str] = None
+    armor: Optional[int] = None
 
 
 @dataclass(slots=True)

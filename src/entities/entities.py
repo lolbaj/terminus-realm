@@ -60,6 +60,8 @@ ARMOR_SUFFIXES = {
     "of Iron": {"defense": 2},
 }
 
+SPECIAL_EFFECTS = ["Vampiric", "Flaming", "Frozen", "Swift"]
+
 
 class EntityFactory:
     """Factory for creating entities with predefined templates."""
@@ -108,6 +110,11 @@ class EntityFactory:
         """Create a player entity."""
         eid = self.entity_manager.create_entity()
 
+        # Create initial equipment
+        sword = self.create_item(0, 0, "sword")
+        # Remove position from equipped item so it doesn't show on map
+        self.entity_manager.remove_component(sword, Position)
+
         # Add components
         self.entity_manager.add_component(eid, Position(x=x, y=y))
         self.entity_manager.add_component(
@@ -118,9 +125,12 @@ class EntityFactory:
             eid, Combat(attack_power=0, defense=0)
         )  # Combat now derived from Skills
         self.entity_manager.add_component(eid, Skills())
+
+        # Equip the sword
         self.entity_manager.add_component(
-            eid, Equipment(weapon="Training Sword", weapon_type="melee")
+            eid, Equipment(weapon=sword, weapon_type="melee")
         )
+
         self.entity_manager.add_component(eid, Inventory(capacity=20, items=[]))
         self.entity_manager.add_component(eid, Level())
         self.entity_manager.add_component(eid, Player())
@@ -234,13 +244,22 @@ class EntityFactory:
                 attack_bonus += WEAPON_SUFFIXES[suffix]["attack"]
                 affixes.append(suffix)
 
-            # 3rd/4th: Extra Boost (simplified as just more stat)
+            # 3rd/4th: Extra Boost (Special Effects)
             if num_affixes >= 3:
-                attack_bonus += 2
-                affixes.append("Epic Boost")
+                effect = random.choice(SPECIAL_EFFECTS)
+                affixes.append(effect)
+                name = f"{effect} {name}"
+
             if num_affixes >= 4:
-                attack_bonus += 3
-                affixes.append("Legendary Boost")
+                # Add another special effect
+                effect = random.choice(SPECIAL_EFFECTS)
+                if effect not in affixes:
+                    affixes.append(effect)
+                    name = f"{effect} {name}"
+                else:
+                    # Fallback if duplicate rolled
+                    attack_bonus += 5
+                    affixes.append("Legendary Power")
 
         elif i_type == "armor" and config["affixes"] > 0:
             # Generate Armor Affixes
