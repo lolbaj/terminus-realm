@@ -5,7 +5,7 @@ Test script to verify Phase 3 chunk system functionality.
 import sys
 import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from world.chunk_manager import ChunkManager
 

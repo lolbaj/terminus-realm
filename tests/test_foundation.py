@@ -5,7 +5,7 @@ Basic test to verify the foundation is working.
 import sys
 import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from core.ecs import EntityManager
 from entities.components import Position, Render, Health, Player
