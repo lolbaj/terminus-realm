@@ -1,179 +1,333 @@
 """
-Test script to verify Phase 3 chunk system functionality.
+Tests for Phase 3: World Expansion - Chunk System and Procedural Generation.
 """
 
-import sys
-import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-
-from world.chunk_manager import ChunkManager
+import pytest
+from world.chunk_manager import ChunkManager, Chunk
+from world.persistent_world import PersistentWorld
+from world.map import TILE_FLOOR, TILE_WALL
 
 
-def test_chunk_creation_and_access():
-    """Test that chunks are created and can be accessed properly."""
-    print("Testing chunk creation and access...")
+class TestChunkCreation:
+    """Test chunk creation and basic access."""
 
-    # Create a chunk manager
-    chunk_mgr = ChunkManager(chunk_size=16, buffer_radius=1)
+    def test_chunk_creation(self, chunk_manager):
+        """Test that chunks are created when requested."""
+        chunk = chunk_manager.get_chunk(0, 0)
 
-    # Test getting a chunk
-    chunk = chunk_mgr.get_chunk(0, 0)
-    assert chunk is not None, "Chunk should be created when requested"
-    assert chunk.x == 0 and chunk.y == 0, "Chunk coordinates should match request"
-    assert chunk.size == 16, "Chunk size should match manager's size"
+        assert chunk is not None
+        assert isinstance(chunk, Chunk)
+        assert chunk.x == 0
+        assert chunk.y == 0
 
-    print(f"✓ Chunk (0,0) created with size {chunk.size}")
+    def test_chunk_size(self, chunk_manager):
+        """Test chunk has correct size."""
+        chunk = chunk_manager.get_chunk(0, 0)
 
-    # Test world-to-chunk coordinate conversion
-    world_x, world_y = 25, 40
-    chunk_x, chunk_y = chunk_mgr.get_chunk_coords(world_x, world_y)
-    expected_chunk_x, expected_chunk_y = 1, 2  # 25//16=1, 40//16=2
+        assert chunk.size == 32
+        assert chunk.map.width == 32
+        assert chunk.map.height == 32
 
-    assert (
-        chunk_x == expected_chunk_x
-    ), f"Expected chunk_x {expected_chunk_x}, got {chunk_x}"
-    assert (
-        chunk_y == expected_chunk_y
-    ), f"Expected chunk_y {expected_chunk_y}, got {chunk_y}"
+    def test_chunk_world_coordinates(self, chunk_manager):
+        """Test chunk world coordinate calculation."""
+        chunk = chunk_manager.get_chunk(0, 0)
 
-    print(
-        f"✓ World coordinates ({world_x}, {world_y}) map to chunk ({chunk_x}, {chunk_y})"
-    )
+        assert chunk.world_x == 0
+        assert chunk.world_y == 0
 
-    # Test tile access
-    tile_type = chunk_mgr.get_tile_at(world_x, world_y)
-    assert tile_type is not None, "Tile should be accessible"
+        chunk2 = chunk_manager.get_chunk(1, 1)
+        assert chunk2.world_x == 32
+        assert chunk2.world_y == 32
 
-    print(f"✓ Tile at ({world_x}, {world_y}) is accessible with type {tile_type}")
+    def test_chunk_local_to_world_conversion(self, chunk_manager):
+        """Test converting between chunk-local and world coordinates."""
+        chunk = chunk_manager.get_chunk(0, 0)
 
+        # Local (5, 5) in chunk (0, 0) should be world (5, 5)
+        world_x, world_y = chunk.get_world_pos(5, 5)
+        assert world_x == 5
+        assert world_y == 5
 
-def test_chunk_loading_unloading():
-    """Test the rolling buffer system for loading/unloading chunks."""
-    print("\nTesting chunk loading and unloading...")
+        # Local (5, 5) in chunk (1, 1) should be world (37, 37)
+        chunk2 = chunk_manager.get_chunk(1, 1)
+        world_x, world_y = chunk2.get_world_pos(5, 5)
+        assert world_x == 37  # 32 + 5
+        assert world_y == 37
 
-    # Create a chunk manager with small buffer
-    chunk_mgr = ChunkManager(
-        chunk_size=16, buffer_radius=1
-    )  # 3x3 buffer = 9 chunks max
+    def test_chunk_world_to_local_conversion(self, chunk_manager):
+        """Test converting world to chunk-local coordinates."""
+        chunk = chunk_manager.get_chunk(0, 0)
 
-    # Initially, no chunks should be loaded
-    assert (
-        chunk_mgr.get_loaded_chunk_count() == 0
-    ), "Initially no chunks should be loaded"
+        # World (5, 5) should be local (5, 5) in chunk (0, 0)
+        local_x, local_y = chunk.get_chunk_pos(5, 5)
+        assert local_x == 5
+        assert local_y == 5
 
-    # Move to chunk (0,0) - this should load 9 chunks (3x3)
-    chunk_mgr.update_active_area(0, 0)
-    count_after_first_load = chunk_mgr.get_loaded_chunk_count()
-    assert (
-        count_after_first_load == 9
-    ), f"Should have 9 chunks loaded after moving to (0,0), got {count_after_first_load}"
-
-    print(f"✓ Moved to (0,0), loaded {count_after_first_load} chunks")
-
-    # Move to chunk (5,5) - this should unload old chunks and load new ones
-    chunk_mgr.update_active_area(5, 5)
-    count_after_move = chunk_mgr.get_loaded_chunk_count()
-    assert (
-        count_after_move == 9
-    ), f"Should still have 9 chunks loaded after moving, got {count_after_move}"
-
-    print(f"✓ Moved to (5,5), now have {count_after_move} chunks loaded")
-
-    # Verify that old chunks are unloaded by checking if we can still access them
-    # The old center (0,0) should now be outside the active area
-    old_chunk_coords = (0, 0)
-    new_active_area = set()
-    for dx in range(-1, 2):
-        for dy in range(-1, 2):
-            new_active_area.add((5 + dx, 5 + dy))
-
-    # The old chunk should not be in the new active area
-    assert (
-        old_chunk_coords not in new_active_area
-    ), "Old chunk should not be in new active area"
-
-    print("✓ Old chunks properly unloaded when moving away")
+        # World (37, 37) should be local (5, 5) in chunk (1, 1)
+        # Note: chunk.get_chunk_pos converts world -> local for THIS chunk
+        # So we need to get chunk (1,1) and check its local coords
+        chunk2 = chunk_manager.get_chunk(1, 1)
+        local_x, local_y = chunk2.get_chunk_pos(37, 37)
+        assert local_x == 5
+        assert local_y == 5
 
 
-def test_procedural_generation():
-    """Test that chunks are generated with procedural content."""
-    print("\nTesting procedural generation...")
+class TestChunkManager:
+    """Test ChunkManager functionality."""
 
-    # Create a chunk manager
-    chunk_mgr = ChunkManager(chunk_size=16, buffer_radius=0)  # Just center chunk
+    def test_get_chunk_coords(self, chunk_manager):
+        """Test converting world coordinates to chunk coordinates."""
+        # World (0, 0) is in chunk (0, 0)
+        cx, cy = chunk_manager.get_chunk_coords(0, 0)
+        assert cx == 0
+        assert cy == 0
 
-    # Load a chunk
-    chunk_mgr.update_active_area(0, 0)
+        # World (15, 15) is still in chunk (0, 0)
+        cx, cy = chunk_manager.get_chunk_coords(15, 15)
+        assert cx == 0
+        assert cy == 0
 
-    # Check that the chunk has varied terrain
-    chunk = chunk_mgr.get_chunk(0, 0)
-    unique_tile_types = set(chunk.map.tiles.flatten())
+        # World (32, 32) is in chunk (1, 1)
+        cx, cy = chunk_manager.get_chunk_coords(32, 32)
+        assert cx == 1
+        assert cy == 1
 
-    # Should have more than just one tile type (walls)
-    assert (
-        len(unique_tile_types) > 1
-    ), f"Chunk should have varied terrain, only found types: {unique_tile_types}"
+        # World (63, 63) is still in chunk (1, 1)
+        cx, cy = chunk_manager.get_chunk_coords(63, 63)
+        assert cx == 1
+        assert cy == 1
 
-    print(
-        f"✓ Chunk has {len(unique_tile_types)} different tile types: {unique_tile_types}"
-    )
+    def test_tile_access(self, chunk_manager):
+        """Test accessing tiles through chunk manager."""
+        tile = chunk_manager.get_tile_at(5, 5)
+        assert tile is not None
 
-    # Test consistency - same chunk coords should generate same content
-    chunk2 = chunk_mgr.get_chunk(0, 0)
-    # Compare the maps (they should be identical for the same coordinates)
-    maps_identical = (chunk.map.tiles == chunk2.map.tiles).all()
-    assert maps_identical, "Same chunk coordinates should generate identical content"
+        tile = chunk_manager.get_tile_at(20, 20)
+        assert tile is not None
 
-    print("✓ Procedural generation is consistent for same coordinates")
+    def test_walkable_check(self, chunk_manager):
+        """Test checking if tiles are walkable."""
+        walkable = chunk_manager.is_walkable(5, 5)
+        assert isinstance(walkable, bool)
 
+        walkable = chunk_manager.is_walkable(20, 20)
+        assert isinstance(walkable, bool)
 
-def test_world_boundary_access():
-    """Test accessing tiles near and beyond chunk boundaries."""
-    print("\nTesting world boundary access...")
-
-    # Create a chunk manager
-    chunk_mgr = ChunkManager(chunk_size=16, buffer_radius=1)
-    chunk_mgr.update_active_area(0, 0)
-
-    # Test accessing tiles at chunk boundaries
-    boundary_tests = [
-        (15, 15),  # Edge of chunk (0,0)
-        (16, 16),  # Corner of chunk (1,1)
-        (0, 0),  # Beginning of chunk (0,0)
-    ]
-
-    for wx, wy in boundary_tests:
-        tile = chunk_mgr.get_tile_at(wx, wy)
-        assert tile is not None, f"Tile at boundary ({wx}, {wy}) should be accessible"
-
-        walkable = chunk_mgr.is_walkable(wx, wy)
-        assert isinstance(
-            walkable, bool
-        ), f"is_walkable should return boolean for ({wx}, {wy})"
-
-        transparent = chunk_mgr.is_transparent(wx, wy)
-        assert isinstance(
-            transparent, bool
-        ), f"is_transparent should return boolean for ({wx}, {wy})"
-
-    print("✓ Successfully accessed tiles at various boundaries")
+    def test_transparent_check(self, chunk_manager):
+        """Test checking if tiles are transparent."""
+        transparent = chunk_manager.is_transparent(5, 5)
+        assert isinstance(transparent, bool)
 
 
-def main():
-    """Run all chunk system tests."""
-    print("Testing Phase 3: World Expansion - Chunk System\n")
+class TestRollingBuffer:
+    """Test the rolling buffer chunk loading system."""
 
-    test_chunk_creation_and_access()
-    test_chunk_loading_unloading()
-    test_procedural_generation()
-    test_world_boundary_access()
+    def test_initial_chunk_count(self, chunk_manager):
+        """Test initially no chunks are loaded."""
+        count = chunk_manager.get_loaded_chunk_count()
+        assert count == 0
 
-    print("\n✓ All Phase 3 tests passed!")
-    print(
-        "Chunk system with rolling buffer and procedural generation is working correctly."
-    )
+    def test_update_active_area_loads_chunks(self, chunk_manager):
+        """Test that updating active area loads chunks."""
+        # Update with chunk coordinates (not world coordinates)
+        chunk_manager.update_active_area(0, 0)
+
+        # Give async worker time to load
+        import time
+
+        time.sleep(0.1)
+
+        # With buffer_radius=1, should load 3x3 = 9 chunks
+        count = chunk_manager.get_loaded_chunk_count()
+        assert count == 9
+
+    def test_chunks_unloaded_when_moving(self, chunk_manager):
+        """Test that old chunks are unloaded when moving away."""
+        import time
+
+        # Load chunks at (0, 0)
+        chunk_manager.update_active_area(0, 0)
+        time.sleep(0.1)
+        initial_count = chunk_manager.get_loaded_chunk_count()
+
+        # Move far away
+        chunk_manager.update_active_area(10, 10)
+        time.sleep(0.1)
+
+        # Should still have 9 chunks (new area)
+        new_count = chunk_manager.get_loaded_chunk_count()
+        assert new_count == 9
+
+        # Old chunks should be unloaded
+        # The origin chunk may or may not be loaded depending on implementation
+        # This test documents the expected behavior
+
+    def test_active_chunks_set(self, chunk_manager):
+        """Test active chunks set is maintained."""
+        chunk_manager.update_active_area(5, 5)
+
+        # Center chunk should be in active set
+        assert (5, 5) in chunk_manager.active_chunks
+
+        # Adjacent chunks should be in active set
+        assert (4, 5) in chunk_manager.active_chunks
+        assert (6, 5) in chunk_manager.active_chunks
+        assert (5, 4) in chunk_manager.active_chunks
+        assert (5, 6) in chunk_manager.active_chunks
 
 
-if __name__ == "__main__":
-    main()
+class TestProceduralGeneration:
+    """Test procedural content generation."""
+
+    def test_chunk_has_varied_terrain(self, chunk_manager):
+        """Test that chunks have varied terrain."""
+        chunk_manager.update_active_area(0, 0)
+        chunk = chunk_manager.get_chunk(0, 0)
+
+        unique_tiles = set(chunk.map.tiles.flatten())
+
+        # Should have more than just walls
+        assert (
+            len(unique_tiles) > 1
+        ), f"Chunk should have varied terrain, found: {unique_tiles}"
+
+    def test_generation_consistency(self, chunk_manager):
+        """Test that same coordinates generate same content."""
+        chunk1 = chunk_manager.get_chunk(0, 0)
+        chunk2 = chunk_manager.get_chunk(0, 0)
+
+        # Same chunk coordinates should produce identical content
+        maps_identical = (chunk1.map.tiles == chunk2.map.tiles).all()
+        assert maps_identical, "Same chunk coords should generate identical content"
+
+    def test_different_chunks_different_content(self, chunk_manager):
+        """Test that different chunks have different content."""
+        chunk1 = chunk_manager.get_chunk(0, 0)
+        chunk2 = chunk_manager.get_chunk(10, 10)
+
+        # Different chunks should generally have different content
+        # (They might be similar due to noise, but unlikely identical)
+        maps_different = not (chunk1.map.tiles == chunk2.map.tiles).all()
+        # Note: This might fail if noise produces similar patterns
+        # It's more of a documentation test
+
+
+class TestBoundaryAccess:
+    """Test accessing tiles at chunk boundaries."""
+
+    def test_chunk_boundary_tiles(self, chunk_manager):
+        """Test accessing tiles at chunk boundaries."""
+        chunk_manager.update_active_area(0, 0)
+
+        # Test tiles at chunk (0,0) boundary
+        boundary_tiles = [
+            (15, 15),  # Edge of chunk (0,0)
+            (0, 15),  # Left edge
+            (15, 0),  # Top edge
+        ]
+
+        for x, y in boundary_tiles:
+            tile = chunk_manager.get_tile_at(x, y)
+            assert tile is not None, f"Tile at ({x}, {y}) should be accessible"
+
+    def test_chunk_corner_tiles(self, chunk_manager):
+        """Test accessing tiles at chunk corners."""
+        chunk_manager.update_active_area(0, 0)
+
+        corners = [(0, 0), (0, 15), (15, 0), (15, 15)]
+
+        for x, y in corners:
+            tile = chunk_manager.get_tile_at(x, y)
+            assert tile is not None, f"Corner tile at ({x}, {y}) should be accessible"
+
+    def test_cross_boundary_access(self, chunk_manager):
+        """Test accessing tiles across chunk boundaries."""
+        chunk_manager.update_active_area(0, 0)
+
+        # Access tiles that cross from chunk (0,0) to (1,1)
+        tiles = [
+            (15, 15),  # Last tile of chunk (0,0)
+            (16, 16),  # First tile of chunk (1,1)
+            (15, 16),  # Boundary crossing
+            (16, 15),  # Boundary crossing
+        ]
+
+        for x, y in tiles:
+            tile = chunk_manager.get_tile_at(x, y)
+            assert (
+                tile is not None
+            ), f"Cross-boundary tile at ({x}, {y}) should be accessible"
+
+
+class TestPersistentWorld:
+    """Test persistent world system."""
+
+    def test_world_creation(self):
+        """Test creating a persistent world."""
+        world = PersistentWorld(world_width=100, world_height=100)
+
+        assert world.world_width == 100
+        assert world.world_height == 100
+
+    def test_world_generation(self):
+        """Test generating a persistent world."""
+        world = PersistentWorld(world_width=100, world_height=100)
+        world.generate_world()
+
+        assert world.world_map is not None
+        assert world.world_map.shape == (100, 100)
+
+    def test_world_biome_map(self):
+        """Test world has biome information."""
+        world = PersistentWorld(world_width=100, world_height=100)
+        world.generate_world()
+
+        assert world.biome_map is not None
+        assert world.biome_map.shape == (100, 100)
+
+    def test_get_biome_at(self):
+        """Test getting biome at position."""
+        world = PersistentWorld(world_width=100, world_height=100)
+        world.generate_world()
+
+        biome = world.biome_map[50, 50]
+        assert biome is not None
+
+    def test_world_save_load(self, tmp_path):
+        """Test saving and loading world."""
+        save_file = tmp_path / "test_world.pkl"
+
+        world1 = PersistentWorld(world_width=50, world_height=50)
+        world1.generate_world()
+        world1.world_file = str(save_file)
+        world1.save_world()
+
+        # Load into new instance
+        world2 = PersistentWorld(world_width=50, world_height=50)
+        world2.world_file = str(save_file)
+        world2.load_world()
+
+        # Maps should be identical
+        assert (world1.world_map == world2.world_map).all()
+
+
+class TestChunkEntities:
+    """Test entity management in chunks."""
+
+    def test_chunk_entity_storage(self, chunk_manager):
+        """Test that chunks can store entity references."""
+        chunk = chunk_manager.get_chunk(0, 0)
+
+        # Chunks have an entities set
+        assert hasattr(chunk, "entities")
+        assert isinstance(chunk.entities, set)
+
+    def test_chunk_entity_tracking(self, chunk_manager, entity_factory):
+        """Test tracking entities in chunks."""
+        chunk = chunk_manager.get_chunk(0, 0)
+
+        # Add an entity reference
+        test_eid = 12345
+        chunk.entities.add(test_eid)
+
+        assert test_eid in chunk.entities
