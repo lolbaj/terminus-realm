@@ -29,9 +29,9 @@ class Renderer:
         self.map_render_height = 13
 
         # Double buffering for efficient rendering
-        # Initialize with enough space for a large terminal
-        max_shape = (200, 200)
-        self.previous_frame = np.full(max_shape, " ", dtype=object)
+        # Initialize with enough space for current terminal
+        max_shape = (max(200, self.screen_height), max(200, self.screen_width // 2))
+        self.previous_frame = np.full(max_shape, "  ", dtype=object)
         self.previous_fg_buffer = np.full((*max_shape, 3), -1, dtype=np.int16)
         self.previous_bg_buffer = np.full((*max_shape, 3), -1, dtype=np.int16)
 
@@ -42,6 +42,14 @@ class Renderer:
         # Flag to clear screen
         self.first_render = True
         self.needs_full_clear = False
+
+        # Screen shake state
+        self.shake_intensity = 0.0
+        self.shake_end_time = 0.0
+
+        # Camera tracking to force clear on move
+        self._last_cam_x = -1
+        self._last_cam_y = -1
 
     def _draw_text_packed(self, buffer, x, y, text, fg_color, max_width=None):
         """Draw text to the buffer, packing 2 chars per cell for normal width."""
@@ -79,6 +87,13 @@ class Renderer:
                 buffer[y + j, x + w - 1] = "||"
                 self.fg_color_buffer[y + j, x + w - 1] = color
 
+    def trigger_shake(self, intensity: float, duration: float = 0.3):
+        """Trigger a screen shake effect."""
+        import time
+
+        self.shake_intensity = intensity
+        self.shake_end_time = time.time() + duration
+
     def render(
         self,
         game_map: "GameMap",
@@ -104,18 +119,36 @@ class Renderer:
             self.screen_height = t_lines
             self.needs_full_clear = True
 
-        if self.first_render or self.needs_full_clear:
-            print("\033[2J\033[H", end="", flush=True)
-            self.first_render = False
-            self.needs_full_clear = False
-            # Wipe previous frame to force redraw
-            self.previous_frame.fill(" ")
+            # Ensure buffers are large enough for new terminal size
+            rows_needed = self.screen_height
+            cols_needed = self.screen_width // 2
+            current_max_rows, current_max_cols = self.previous_frame.shape
+
+            if rows_needed > current_max_rows or cols_needed > current_max_cols:
+                new_max_rows = max(rows_needed, current_max_rows)
+                new_max_cols = max(cols_needed, current_max_cols)
+                new_max_shape = (new_max_rows, new_max_cols)
+
+                # Resize all buffers
+                new_prev_frame = np.full(new_max_shape, "  ", dtype=object)
+                new_prev_frame[:current_max_rows, :current_max_cols] = self.previous_frame
+                self.previous_frame = new_prev_frame
+
+                new_prev_fg = np.full((*new_max_shape, 3), -1, dtype=np.int16)
+                new_prev_fg[:current_max_rows, :current_max_cols] = self.previous_fg_buffer
+                self.previous_fg_buffer = new_prev_fg
+
+                new_prev_bg = np.full((*new_max_shape, 3), -1, dtype=np.int16)
+                new_prev_bg[:current_max_rows, :current_max_cols] = self.previous_bg_buffer
+                self.previous_bg_buffer = new_prev_bg
+
+                self.fg_color_buffer = np.full((*new_max_shape, 3), -1, dtype=np.int16)
+                self.bg_color_buffer = np.full((*new_max_shape, 3), -1, dtype=np.int16)
 
         # --- Dynamic Viewport Logic (16:9) ---
         ui_reserve = 6  # Border + Stats + Skills + Messages
 
         # Avail width/height in CELLS
-        # Increase margin to -4 (2 cells/4 chars on each side) to prevent touching edges
         avail_w = (self.screen_width // 2) - 4
         avail_h = self.screen_height - ui_reserve - 4
 
@@ -143,14 +176,39 @@ class Renderer:
 
         # Camera
         from entities.components import Position
+        import time
 
         player_pos = entity_manager.get_component(player_id, Position)
         camera_x, camera_y = 0, 0
         if player_pos:
             camera_x = player_pos.x - self.map_render_width // 2
             camera_y = player_pos.y - self.map_render_height // 2
+
+            # Apply Screen Shake
+            if time.time() < self.shake_end_time:
+                shake_x = int(np.random.uniform(-1, 1) * self.shake_intensity)
+                shake_y = int(np.random.uniform(-1, 1) * self.shake_intensity)
+                camera_x += shake_x
+                camera_y += shake_y
+
             camera_x = max(0, min(camera_x, game_map.width - self.map_render_width))
             camera_y = max(0, min(camera_y, game_map.height - self.map_render_height))
+
+        # Force clear if camera moved significantly or screen resized
+        if camera_x != self._last_cam_x or camera_y != self._last_cam_y:
+            self._last_cam_x = camera_x
+            self._last_cam_y = camera_y
+            # We don't necessarily need a full ANSI clear (\033[2J), 
+            # just wiping previous_frame will force redraw in _output_buffer
+            self.needs_full_clear = True
+
+        if self.first_render or self.needs_full_clear:
+            self.first_render = False
+            self.needs_full_clear = False
+            # Fill with None to force a redraw of everything on the next frame
+            self.previous_frame.fill(None)
+            self.previous_fg_buffer.fill(-1)
+            self.previous_bg_buffer.fill(-1)
 
         # Render visible frame/box
         self._draw_box(
@@ -179,6 +237,12 @@ class Renderer:
             self._render_inventory(
                 render_buffer, entity_manager, player_id, inventory_selection
             )
+        elif game_state == "STATS":
+            self._render_stats(
+                render_buffer, entity_manager, player_id, inventory_selection
+            )
+        elif game_state == "HELP":
+            self._render_help(render_buffer)
         elif game_state == "SHOPPING":
             self._render_shop(render_buffer, entity_manager, shop_id)
 
@@ -194,57 +258,301 @@ class Renderer:
         offset_x: int = 1,
         offset_y: int = 1,
     ):
-        """Render the game map to the buffer with camera offset."""
+        """Render the game map to the buffer with camera offset using vectorized operations."""
+        import time
+
+        current_time = time.time()
+
         # Use the render dimensions which are calculated based on screen size
         render_w = self.map_render_width
         render_h = self.map_render_height
 
+        # Calculate limits for the map slice
+        y_end = min(cam_y + render_h, game_map.height)
+        x_end = min(cam_x + render_w, game_map.width)
+
+        slice_h = y_end - cam_y
+        slice_w = x_end - cam_x
+
+        if slice_h <= 0 or slice_w <= 0:
+            return
+
         # Calculate offsets to center the map drawing in the buffer
-        buffer_x_offset = offset_x + 1
         buffer_y_offset = offset_y + 1
+        buffer_x_offset = offset_x + 1
 
-        for y in range(render_h):
-            for x in range(render_w):
-                # Map coordinates
-                map_x = x + cam_x
-                map_y = y + cam_y
+        # Get map slice
+        tiles_slice = game_map.tiles[cam_y:y_end, cam_x:x_end]
+        visible_slice = game_map.visible[cam_y:y_end, cam_x:x_end]
 
-                # Check bounds
-                if 0 <= map_x < game_map.width and 0 <= map_y < game_map.height:
-                    # Check visibility
-                    is_visible = False
-                    if (
-                        0 <= map_x < game_map.visible.shape[1]
-                        and 0 <= map_y < game_map.visible.shape[0]
-                    ):
-                        is_visible = game_map.visible[map_y, map_x]
+        # Map to chars and colors (Very fast vectorized indexing)
+        chars = game_map.tile_char_lookup[tiles_slice].copy()
+        fg_colors = game_map.tile_fg_color_lookup[tiles_slice].copy()
+        bg_colors = game_map.tile_bg_color_lookup[tiles_slice].copy()
 
-                    # Get char
-                    char = game_map.get_tile_char(map_x, map_y, visible=is_visible)
-                    fg_color = game_map.get_tile_fg_color(
-                        map_x, map_y, visible=is_visible
-                    )
+        # Handle Procedural Grass Detail
+        from world.map import TILE_GRASS, TILE_LAVA, TILE_WATER
 
-                    # Get bg color if available
-                    bg_color = None
-                    if 0 <= map_x < game_map.width and 0 <= map_y < game_map.height:
-                        tile_def = game_map.tile_definitions[
-                            game_map.tiles[map_y, map_x]
-                        ]
-                        bg_color = tile_def.bg_color
+        grass_mask = tiles_slice == TILE_GRASS
+        if np.any(grass_mask):
+            # Revert to normal solid green from 1st commit
+            fg_colors[grass_mask] = [50, 200, 50]
+            bg_colors[grass_mask] = [34, 160, 34]
+            chars[grass_mask] = "  "
 
-                    # Draw to buffer
-                    buffer_y = y + buffer_y_offset
-                    buffer_x = x + buffer_x_offset
+        # Handle Procedural Lava Texture
+        lava_mask = tiles_slice == TILE_LAVA
+        if np.any(lava_mask):
+            t = current_time * 0.3  # Slow, viscous flow
+            yy, xx = np.ogrid[cam_y:y_end, cam_x:x_end]
 
-                    if (
-                        0 <= buffer_y < self.screen_height
-                        and 0 <= buffer_x < self.screen_width // 2
-                    ):
-                        buffer[buffer_y, buffer_x] = char
-                        self.fg_color_buffer[buffer_y, buffer_x] = fg_color
-                        if bg_color:
-                            self.bg_color_buffer[buffer_y, buffer_x] = bg_color
+            # Dynamic flow with multiple octaves
+            flow_1 = np.sin(xx * 0.2 + t * 0.5) * np.cos(yy * 0.3 - t * 0.3)
+            flow_2 = np.sin(yy * 0.15 + t * 0.8) * np.cos(xx * 0.25 + t * 0.4)
+            combined_flow = (flow_1 + flow_2 * 0.5 + 1.5) / 3.0
+
+            heat_core = (
+                np.sin(xx * 0.4 + combined_flow * 3.0 + t) * np.cos(yy * 0.5 - t * 0.6)
+                + 1.0
+            ) / 2.0
+
+            crust_noise = ((xx * 31 + yy * 37) % 41) / 41.0
+            is_crust = crust_noise > 0.65 + heat_core * 0.35
+
+            # Glow pulse
+            glow = 1.0 + np.sin(t * 1.5) * 0.1
+
+            # Determine colors based on heat
+            r_base = np.clip(60 + heat_core * 195, 0, 255).astype(np.int16)
+            g_base = np.clip(heat_core**2 * 120 * glow, 0, 255).astype(np.int16)
+
+            fg_colors[lava_mask, 0] = r_base[lava_mask]
+            fg_colors[lava_mask, 1] = g_base[lava_mask]
+            fg_colors[lava_mask, 2] = 0
+
+            bg_colors[lava_mask, 0] = (r_base[lava_mask] // 3).astype(np.int16)
+            bg_colors[lava_mask, 1] = (g_base[lava_mask] // 5).astype(np.int16)
+            bg_colors[lava_mask, 2] = 0
+
+            # Assign characters based on heat density (no 'oo')
+            h_mask = lava_mask & (heat_core > 0.85)
+            m_mask = lava_mask & (heat_core <= 0.85) & (heat_core > 0.6)
+            l_mask = lava_mask & (heat_core <= 0.6) & (heat_core > 0.3)
+            c_mask = lava_mask & (is_crust | (heat_core <= 0.3))
+
+            chars[h_mask] = "██"  # Brightest core
+            chars[m_mask] = "▓▓"  # Dense heat
+            chars[l_mask] = "▒▒"  # Cooling lava
+            chars[c_mask] = "░░"  # Thin crust/coolest regions
+
+            # Extra dark crust patches
+            dark_crust = c_mask & (crust_noise > 0.8)
+            if np.any(dark_crust):
+                fg_colors[dark_crust, 0] = 30
+                fg_colors[dark_crust, 1] = 10
+                bg_colors[dark_crust, 0] = 15
+                bg_colors[dark_crust, 1] = 5
+                chars[dark_crust] = "  "
+
+        water_mask = tiles_slice == TILE_WATER
+        if np.any(water_mask):
+            # Viewport-independent shore detection using the full map
+            # This prevents water tiles from changing color as they enter/leave the screen
+            y_start = cam_y
+            x_start = cam_x
+            
+            # Get a slightly larger slice of the actual map to check neighbors
+            y_p = max(0, y_start - 1)
+            y_p2 = min(game_map.height, y_end + 1)
+            x_p = max(0, x_start - 1)
+            x_p2 = min(game_map.width, x_end + 1)
+            
+            # Create a shore mask for the visible slice
+            # A tile is "shallow" if it's water but adjacent to land
+            full_is_land = game_map.tiles != TILE_WATER
+            
+            # Efficient neighbor check for the current slice
+            # We use the full map's land-mask to avoid viewport edge artifacts
+            land_slice = full_is_land[y_start:y_end, x_start:x_end]
+            
+            # Check neighbors in the full map
+            near_land = np.zeros_like(land_slice, dtype=bool)
+            if y_start > 0:
+                near_land |= full_is_land[y_start-1:y_end-1, x_start:x_end]
+            if y_end < game_map.height:
+                near_land |= full_is_land[y_start+1:y_end+1, x_start:x_end]
+            if x_start > 0:
+                near_land |= full_is_land[y_start:y_end, x_start-1:x_end-1]
+            if x_end < game_map.width:
+                near_land |= full_is_land[y_start:y_end, x_start+1:x_end+1]
+                
+            shallows_mask = water_mask & near_land
+            
+            t = current_time * 0.8  # Slightly slower for smoother flow
+            yy, xx = np.ogrid[y_start:y_end, x_start:x_end]
+
+            # Simplified flow for stability
+            flow = (np.sin(xx * 0.2 + t) * np.cos(yy * 0.2 - t * 0.5) + 1.0) / 2.0
+            motion = (np.sin(xx * 0.1 + flow * 2.0) + 1.0) / 2.0
+
+            def get_water_color(m, shallows):
+                # Deep water: Dark blue-teal
+                r_v = (15 + m * 10).astype(np.int16)
+                g_v = (60 + m * 20).astype(np.int16)
+                b_v = (130 + m * 40).astype(np.int16)
+
+                if np.any(shallows):
+                    # Shallow water: Blend towards grass/sand colors (more green/yellow)
+                    s_mask = shallows
+                    # Greener/lighter for the shore
+                    r_v[s_mask] = (40 + m[s_mask] * 15).astype(np.int16)
+                    g_v[s_mask] = (120 + m[s_mask] * 30).astype(np.int16)
+                    b_v[s_mask] = (140 + m[s_mask] * 20).astype(np.int16)
+                return r_v, g_v, b_v
+
+            r_f, g_f, b_f = get_water_color(motion[water_mask], shallows_mask[water_mask])
+
+            # Foreground and Background synced for solid liquid look
+            fg_colors[water_mask, 0] = r_f
+            fg_colors[water_mask, 1] = g_f
+            fg_colors[water_mask, 2] = b_f
+            bg_colors[water_mask, 0] = r_f
+            bg_colors[water_mask, 1] = g_f
+            bg_colors[water_mask, 2] = b_f
+
+            # Use pure background color
+            chars[water_mask] = "  "
+
+        # Handle Procedural Sand Dunes
+        from world.map import TILE_SAND, TILE_CACTUS
+
+        sand_mask = (tiles_slice == TILE_SAND) | (tiles_slice == TILE_CACTUS)
+        if np.any(sand_mask):
+            t = current_time * 0.2
+            yy, xx = np.ogrid[cam_y:y_end, cam_x:x_end]
+
+            # Broad, slow sweeps for dunes to avoid pixelation
+            dune_wave = (
+                np.sin(xx * 0.04 + t * 0.5) * 0.5
+                + np.cos(yy * 0.03 - t * 0.3) * 0.5
+                + 1.0
+            ) / 2.0
+
+            def get_sand_color(d):
+                # Classic golden desert colors from 1st commit
+                r = np.clip(210 + d * 20, 0, 255).astype(np.int16)
+                g = np.clip(190 + d * 15, 0, 255).astype(np.int16)
+                b = np.clip(120 + d * 10, 0, 255).astype(np.int16)
+                return r, g, b
+
+            r_s, g_s, b_s = get_sand_color(dune_wave[sand_mask])
+
+            bg_colors[sand_mask, 0] = r_s
+            bg_colors[sand_mask, 1] = g_s
+            bg_colors[sand_mask, 2] = b_s
+
+            # Pure color sand - no characters
+            chars[sand_mask] = "  "
+
+            # Ensure TILE_CACTUS keeps its character
+            cactus_only = sand_mask & (tiles_slice == TILE_CACTUS)
+            if np.any(cactus_only):
+                chars[cactus_only] = "ψ "
+                fg_colors[cactus_only, 0] = 100
+                fg_colors[cactus_only, 1] = 220
+                fg_colors[cactus_only, 2] = 100
+
+        # Handle Procedural Floor Texture
+        floor_mask = tiles_slice == 0
+        if np.any(floor_mask):
+            yy, xx = np.ogrid[cam_y:y_end, cam_x:x_end]
+
+            # Better stone variety and large-scale wear
+            stone_noise = ((xx * 17 + yy * 23) % 29) / 29.0
+            wear_large = (np.sin(xx * 0.15) * np.cos(yy * 0.1) + 1.0) / 2.0
+
+            # Base stone colors
+            base_val = 85 + stone_noise * 30 - wear_large * 15
+            fg_colors[floor_mask, 0] = base_val[floor_mask].astype(np.int16)
+            fg_colors[floor_mask, 1] = (base_val[floor_mask] - 2).astype(np.int16)
+            fg_colors[floor_mask, 2] = (base_val[floor_mask] - 5).astype(np.int16)
+
+            bg_colors[floor_mask, 0] = (base_val[floor_mask] // 3).astype(np.int16)
+            bg_colors[floor_mask, 1] = (base_val[floor_mask] // 3).astype(np.int16)
+            bg_colors[floor_mask, 2] = (base_val[floor_mask] // 3 + 2).astype(np.int16)
+
+            # Grout/Grid (4x4 tiles)
+            tile_grid = ((xx - cam_x) % 4 == 0) | ((yy - cam_y) % 4 == 0)
+            if np.any(tile_grid):
+                g_mask = floor_mask & tile_grid
+                fg_colors[g_mask] = np.clip(fg_colors[g_mask] - 30, 20, 255)
+                bg_colors[g_mask] = np.clip(bg_colors[g_mask] - 10, 10, 255)
+                chars[g_mask] = "░░"
+
+            # Worn patches
+            worn_stone = floor_mask & (stone_noise > 0.85)
+            if np.any(worn_stone):
+                chars[worn_stone] = "· "
+
+        # Handle Procedural Wall Texture
+        wall_mask = tiles_slice == 1
+        if np.any(wall_mask):
+            # Original solid wall style
+            fg_colors[wall_mask] = [80, 80, 90]
+            bg_colors[wall_mask] = [20, 20, 25]
+            chars[wall_mask] = "██"
+
+        # Handle Visibility/Exploration
+        if game_map.is_dark:
+            yy, xx = np.ogrid[cam_y:y_end, cam_x:x_end]
+            px, py = cam_x + render_w // 2, cam_y + render_h // 2
+            dist_sq = (xx - px) ** 2 + (yy - py) ** 2
+            light_radius = 12
+            max_dist_sq = light_radius**2
+            light_level = np.clip(1.0 - (dist_sq / max_dist_sq), 0.2, 1.0) ** 1.5
+            fg_colors[:, :, 0] = (fg_colors[:, :, 0] * light_level).astype(np.int16)
+            fg_colors[:, :, 1] = (fg_colors[:, :, 1] * light_level).astype(np.int16)
+            fg_colors[:, :, 2] = (fg_colors[:, :, 2] * light_level).astype(np.int16)
+            bg_mask = bg_colors[:, :, 0] != -1
+            bg_colors[bg_mask, 0] = (
+                bg_colors[bg_mask, 0] * light_level[bg_mask]
+            ).astype(np.int16)
+            bg_colors[bg_mask, 1] = (
+                bg_colors[bg_mask, 1] * light_level[bg_mask]
+            ).astype(np.int16)
+            bg_colors[bg_mask, 2] = (
+                bg_colors[bg_mask, 2] * light_level[bg_mask]
+            ).astype(np.int16)
+
+            not_visible = ~visible_slice
+            if np.any(not_visible):
+                explored_slice = game_map.explored[cam_y:y_end, cam_x:x_end]
+                dim_mask = not_visible & explored_slice
+                if np.any(dim_mask):
+                    fg_colors[dim_mask] = np.maximum(0, fg_colors[dim_mask] - 100)
+                hide_mask = not_visible & ~explored_slice
+                if np.any(hide_mask):
+                    chars[hide_mask] = "  "
+                    fg_colors[hide_mask] = 0
+                    bg_colors[hide_mask] = -1
+
+        # Assign to buffers
+        by_end = buffer_y_offset + slice_h
+        bx_end = buffer_x_offset + slice_w
+        if by_end > self.screen_height:
+            by_end = self.screen_height
+            chars = chars[: by_end - buffer_y_offset, :]
+            fg_colors = fg_colors[: by_end - buffer_y_offset, :]
+            bg_colors = bg_colors[: by_end - buffer_y_offset, :]
+        if bx_end > self.screen_width // 2:
+            bx_end = self.screen_width // 2
+            chars = chars[:, : bx_end - buffer_x_offset]
+            fg_colors = fg_colors[:, : bx_end - buffer_x_offset]
+            bg_colors = bg_colors[:, : bx_end - buffer_x_offset]
+
+        buffer[buffer_y_offset:by_end, buffer_x_offset:bx_end] = chars
+        self.fg_color_buffer[buffer_y_offset:by_end, buffer_x_offset:bx_end] = fg_colors
+        self.bg_color_buffer[buffer_y_offset:by_end, buffer_x_offset:bx_end] = bg_colors
 
     def _render_entities(
         self,
@@ -407,6 +715,159 @@ class Renderer:
         else:
             buffer[start_y + 2, start_x + 2] = "Shop Closed"
 
+    def _render_help(self, buffer: np.ndarray):
+        """Render the help screen overlay."""
+        # Window dimensions
+        win_w = 46
+        win_h = 28
+
+        # Center the window
+        buffer_w = self.screen_width // 2
+        start_x = (buffer_w - win_w) // 2
+        start_y = (self.screen_height - win_h) // 2
+
+        # Draw Window Frame
+        for y in range(win_h):
+            for x in range(win_w):
+                bx = start_x + x
+                by = start_y + y
+                if 0 <= bx < buffer_w and 0 <= by < self.screen_height - 1:
+                    buffer[by, bx] = " "
+                    self.bg_color_buffer[by, bx] = (30, 30, 40)
+                    if x == 0 or x == win_w - 1 or y == 0 or y == win_h - 1:
+                        buffer[by, bx] = "*"
+                        self.fg_color_buffer[by, bx] = (200, 200, 100)
+
+        # Title
+        title = " TERMINUS REALM - CONTROLS "
+        for i, char in enumerate(title):
+            if start_x + (win_w - len(title)) // 2 + i < buffer_w:
+                buffer[start_y, start_x + (win_w - len(title)) // 2 + i] = char
+
+        controls = [
+            ("WASD/Arrows/Vi/Num", "Movement"),
+            ("QEZC / YUBN / 1-9", "Diagonal Movement"),
+            ("Enter/Space/x", "Select/Interact"),
+            ("Space / o", "Action Menu / Attack"),
+            ("i / I", "Toggle Inventory"),
+            ("C / K (Shift)", "Stat Allocation"),
+            ("g / ,", "Pick up Item"),
+            ("t / f", "Target/Fire Weapon"),
+            (". / 5", "Wait/Rest"),
+            ("1, 2, 3", "Cast Skills"),
+            ("?", "Show this Help"),
+            ("Esc / p / Q", "Quit Game"),
+        ]
+
+        for i, (key, desc) in enumerate(controls):
+            y = start_y + 2 + i * 2
+            if y >= start_y + win_h - 1:
+                break
+
+            # Key
+            for j, char in enumerate(key):
+                bx = start_x + 2 + j
+                if bx < buffer_w:
+                    buffer[y, bx] = char
+                    self.fg_color_buffer[y, bx] = (255, 255, 100)
+
+            # Desc
+            for j, char in enumerate(" : " + desc):
+                bx = start_x + 2 + len(key) + j
+                if bx < buffer_w:
+                    buffer[y, bx] = char
+                    self.fg_color_buffer[y, bx] = (200, 200, 200)
+
+        # Footer
+        footer = " Press any key to return "
+        for i, char in enumerate(footer):
+            bx = start_x + (win_w - len(footer)) // 2 + i
+            by = start_y + win_h - 2
+            if bx < buffer_w:
+                buffer[by, bx] = char
+                self.fg_color_buffer[by, bx] = (150, 150, 150)
+
+    def _render_stats(
+        self,
+        buffer: np.ndarray,
+        entity_manager: "EntityManager",
+        player_id: int,
+        selection: int,
+    ):
+        """Render the stat allocation window overlay."""
+        from entities.components import Level, Combat, Health, Mana
+
+        # Window dimensions
+        win_w = 40
+        win_h = 20
+
+        # Center the window
+        buffer_w = self.screen_width // 2
+        start_x = (buffer_w - win_w) // 2
+        start_y = (self.screen_height - win_h) // 2
+
+        # Draw Window Frame
+        for y in range(win_h):
+            for x in range(win_w):
+                bx = start_x + x
+                by = start_y + y
+                if 0 <= bx < buffer_w and 0 <= by < self.screen_height - 1:
+                    buffer[by, bx] = " "
+                    self.bg_color_buffer[by, bx] = (20, 40, 20)  # Dark Green BG
+                    if x == 0 or x == win_w - 1 or y == 0 or y == win_h - 1:
+                        buffer[by, bx] = "+"
+                        self.fg_color_buffer[by, bx] = (50, 200, 50)
+
+        # Title
+        title = " STAT ALLOCATION "
+        for i, char in enumerate(title):
+            if start_x + 2 + i < buffer_w:
+                buffer[start_y, start_x + 2 + i] = char
+
+        level_comp = entity_manager.get_component(player_id, Level)
+        combat = entity_manager.get_component(player_id, Combat)
+        health = entity_manager.get_component(player_id, Health)
+        mana = entity_manager.get_component(player_id, Mana)
+
+        if not level_comp:
+            return
+
+        # Points available
+        pts_text = f"Points Available: {level_comp.attribute_points}"
+        for i, char in enumerate(pts_text):
+            if start_x + 2 + i < buffer_w:
+                buffer[start_y + 2, start_x + 2 + i] = char
+                self.fg_color_buffer[start_y + 2, start_x + 2 + i] = (255, 215, 0)
+
+        # Stats to increase
+        stats = [
+            ("Strength (Atk+2)", combat.attack_power if combat else 0),
+            ("Dexterity (Def+1)", combat.defense if combat else 0),
+            ("Vitality (HP+20)", health.maximum if health else 0),
+            ("Intelligence (MP+15)", mana.maximum if mana else 0),
+        ]
+
+        for i, (name, val) in enumerate(stats):
+            y = start_y + 5 + i * 2
+            prefix = "> " if i == selection else "  "
+            text = f"{prefix}{name}: {val}"
+            color = (255, 255, 255) if i != selection else (255, 255, 0)
+
+            for j, char in enumerate(text):
+                bx = start_x + 4 + j
+                if bx < start_x + win_w - 1:
+                    buffer[y, bx] = char
+                    self.fg_color_buffer[y, bx] = color
+
+        # Help text
+        help_text = "Use WASD/Arrows to move, E/Space to allocate"
+        for i, char in enumerate(help_text):
+            bx = start_x + 2 + i
+            by = start_y + win_h - 2
+            if bx < buffer_w:
+                buffer[by, bx] = char
+                self.fg_color_buffer[by, bx] = (150, 150, 150)
+
     def _render_inventory(
         self,
         buffer: np.ndarray,
@@ -532,7 +993,7 @@ class Renderer:
         offset_y: int = 1,
     ):
         """Render UI elements to the buffer."""
-        from entities.components import Health, Position, Level, Skills
+        from entities.components import Health, Mana, Position, Level, Skills
 
         # Use the map render width plus borders for UI width
         buffer_width = self.map_render_width + 2
@@ -548,6 +1009,7 @@ class Renderer:
         # Get player info
         player_pos = entity_manager.get_component(player_id, Position)
         player_health = entity_manager.get_component(player_id, Health)
+        player_mana = entity_manager.get_component(player_id, Mana)
         player_level = entity_manager.get_component(player_id, Level)
         player_skills = entity_manager.get_component(player_id, Skills)
 
@@ -574,11 +1036,24 @@ class Renderer:
                     (100, 0, 0),
                 )
 
+            # MP Bar
+            if player_mana:
+                self._draw_bar(
+                    buffer,
+                    offset_x + 22,
+                    stats_y,
+                    8,
+                    player_mana.current,
+                    player_mana.maximum,
+                    (50, 100, 255),
+                    (0, 0, 100),
+                )
+
             # XP Bar
             if player_level:
                 self._draw_bar(
                     buffer,
-                    offset_x + 22,
+                    offset_x + 32,
                     stats_y,
                     8,
                     player_level.current_xp,
@@ -611,44 +1086,53 @@ class Renderer:
         """Output the render buffer to the terminal using incremental updates."""
         import sys
 
-        # Hide cursor
-        output_parts = ["\033[?25l"]
+        # Initial output sequence
+        output_parts = []
 
         # Cache last color to reduce escape codes
         last_fg = (-1, -1, -1)
         last_bg = (-1, -1, -1)
 
-        # Track virtual cursor position
-        v_cursor_y = -1
-        v_cursor_x = -1
-
         rows, cols = buffer.shape
-        max_cols = shutil.get_terminal_size().columns
+        t_size = shutil.get_terminal_size()
+        max_cols = t_size.columns
+        max_rows = t_size.lines
+
+        # Limit to terminal size
+        rows = min(rows, max_rows)
+        cols = min(cols, max_cols // 2)
+
+        # Detection for full-screen shifts (e.g. walking)
+        # If too many tiles changed, a full redraw is often cleaner for the terminal
+        changed_mask = (buffer[:rows, :cols] != self.previous_frame[:rows, :cols]) | \
+                       (self.fg_color_buffer[:rows, :cols] != self.previous_fg_buffer[:rows, :cols]).any(axis=2) | \
+                       (self.bg_color_buffer[:rows, :cols] != self.previous_bg_buffer[:rows, :cols]).any(axis=2)
+        
+        change_count = np.count_nonzero(changed_mask)
+        total_cells = rows * cols
+        
+        # If more than 60% of the screen changed, force a full resync
+        force_sync = change_count > (total_cells * 0.6)
 
         for y in range(rows):
-            for x in range(cols):
-                char = buffer[y, x]
-                fg = tuple(self.fg_color_buffer[y, x])
-                bg = tuple(self.bg_color_buffer[y, x])
+            x = 0
+            while x < cols:
+                # Find next changed cell or contiguous changed block
+                if not force_sync and not changed_mask[y, x]:
+                    x += 1
+                    continue
+                
+                # Move cursor to the start of the changed block
+                screen_col = x * 2 + 1
+                output_parts.append(f"\033[{y+1};{screen_col}H")
+                
+                # Draw contiguous block of cells
+                while x < cols and (force_sync or changed_mask[y, x]):
+                    char = buffer[y, x]
+                    fg = tuple(self.fg_color_buffer[y, x])
+                    bg = tuple(self.bg_color_buffer[y, x])
 
-                prev_char = self.previous_frame[y, x]
-                prev_fg = tuple(self.previous_fg_buffer[y, x])
-                prev_bg = tuple(self.previous_bg_buffer[y, x])
-
-                # Check if cell changed or if we need to force sync
-                if char != prev_char or fg != prev_fg or bg != prev_bg:
-                    # Target screen column (1-based)
-                    screen_col = x * 2 + 1
-
-                    # Skip if would exceed terminal width
-                    if screen_col + 1 > max_cols:
-                        continue
-
-                    # Move cursor if drift detected or new line
-                    if y != v_cursor_y or x != v_cursor_x:
-                        output_parts.append(f"\033[{y+1};{screen_col}H")
-
-                    # Update foreground color
+                    # Update colors
                     if fg != last_fg:
                         if fg[0] == -1:
                             output_parts.append("\033[39m")
@@ -656,7 +1140,6 @@ class Renderer:
                             output_parts.append(f"\033[38;2;{fg[0]};{fg[1]};{fg[2]}m")
                         last_fg = fg
 
-                    # Update background color
                     if bg != last_bg:
                         if bg[0] == -1:
                             output_parts.append("\033[49m")
@@ -665,34 +1148,26 @@ class Renderer:
                         last_bg = bg
 
                     # Render and enforce 2-column width
-                    # Python len() counts characters; we need to handle emojis (width 2)
-                    # vs ASCII (width 1).
                     if len(char) == 1:
                         if ord(char) > 126:
-                            # Emoji or Unicode - assume width 2 (Standard for most modern terms)
+                            # Emoji/Wide char - most terms handle as width 2
                             output_parts.append(char)
-                            # Emojis often cause drift; force a cursor move for the next cell
-                            v_cursor_x = -1
                         else:
-                            # Standard ASCII - pad to width 2
+                            # ASCII - pad to width 2
                             output_parts.append(char + " ")
-                            v_cursor_x = x + 1
                     elif len(char) == 2:
                         output_parts.append(char)
-                        v_cursor_x = x + 1
                     else:
-                        # Fallback for weird cases
                         output_parts.append(char[:2])
-                        v_cursor_x = -1
+                    
+                    x += 1
 
-                    v_cursor_y = y
-
-        # Save state
-        self.previous_frame[:rows, :cols] = buffer
+        # Save state for next frame
+        self.previous_frame[:rows, :cols] = buffer[:rows, :cols]
         self.previous_fg_buffer[:rows, :cols] = self.fg_color_buffer[:rows, :cols]
         self.previous_bg_buffer[:rows, :cols] = self.bg_color_buffer[:rows, :cols]
 
-        # Reset state and flush
+        # Reset colors and flush
         output_parts.append("\033[0m")
         sys.stdout.write("".join(output_parts))
         sys.stdout.flush()

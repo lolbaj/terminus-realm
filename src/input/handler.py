@@ -34,20 +34,35 @@ class InputHandler:
                 k: tuple(v) for k, v in CONFIG.controls["movement"].items()
             }
         else:
-            # Default Movement keys: WASD, WASF, and diagonals
+            # Default Movement keys: WASD, Vi-keys, and Numpad
             self.movement_keys = {
-                # WASD
-                "w": (0, -1),  # Up
-                "a": (-1, 0),  # Left
-                "s": (0, 1),  # Down
-                "d": (1, 0),  # Right
-                # WASF support (user requested)
-                "f": (1, 0),  # Right (if using WASF)
-                # Diagonals (using keys around WASD)
-                "q": (-1, -1),  # Up-left
-                "e": (1, -1),  # Up-right
-                "z": (-1, 1),  # Down-left
-                "c": (1, 1),  # Down-right
+                # WASD + Diagonals
+                "w": (0, -1),
+                "a": (-1, 0),
+                "s": (0, 1),
+                "d": (1, 0),
+                "q": (-1, -1),
+                "e": (1, -1),
+                "z": (-1, 1),
+                "c": (1, 1),
+                # Vi-keys
+                "h": (-1, 0),
+                "j": (0, 1),
+                "k": (0, -1),
+                "l": (1, 0),
+                "y": (-1, -1),
+                "u": (1, -1),
+                "b": (-1, 1),
+                "n": (1, 1),
+                # Numpad
+                "8": (0, -1),
+                "2": (0, 1),
+                "4": (-1, 0),
+                "6": (1, 0),
+                "7": (-1, -1),
+                "9": (1, -1),
+                "1": (-1, 1),
+                "3": (1, 1),
             }
 
         if CONFIG.controls and "actions" in CONFIG.controls:
@@ -55,14 +70,28 @@ class InputHandler:
         else:
             # Default Action keys
             self.action_keys = {
-                " ": "action_menu",  # Space for action menu
-                "e": "select",  # 'e' for selection (common interact key)
-                "x": "select",  # 'x' for selection
-                "p": "quit",  # 'p' to quit (instead of 'q' which is now move)
-                "i": "inventory",  # Inventory
+                " ": "action_menu",
+                "o": "action_menu",  # 'o' for open/interact
+                "\r": "select",  # Enter
+                "\n": "select",  # Enter (sometimes)
+                "x": "select",
+                "p": "quit",
+                "Q": "quit",
+                "i": "inventory",
                 "I": "inventory",
-                "g": "pickup",  # Get/Pickup
-                "t": "fire",  # Target/Fire ranged weapon
+                "g": "pickup",
+                ",": "pickup",
+                "f": "fire",  # 'f' for fire/target
+                "t": "fire",
+                "C": "stats",  # Shift-C for stats to avoid 'c' diagonal
+                "K": "stats",  # Shift-K
+                "k": "stats",  # Also allow 'k' (Vi-Up will take precedence if checked first, but let's see)
+                "5": "wait",  # Numpad 5
+                ".": "wait",
+                "?": "help",  # Help Menu
+                "1": "cast_1",
+                "2": "cast_2",
+                "3": "cast_3",
             }
 
         # Store original terminal settings
@@ -73,6 +102,9 @@ class InputHandler:
         try:
             self.original_settings = termios.tcgetattr(sys.stdin)
             tty.setcbreak(sys.stdin)
+            # Hide cursor
+            sys.stdout.write("\033[?25l")
+            sys.stdout.flush()
         except (termios.error, io.UnsupportedOperation):
             # Handle cases where stdin is not a TTY (e.g., when running tests)
             self.original_settings = None
@@ -81,6 +113,9 @@ class InputHandler:
         """Restore terminal to original settings."""
         if self.original_settings:
             try:
+                # Show cursor
+                sys.stdout.write("\033[?25h")
+                sys.stdout.flush()
                 termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.original_settings)
             except termios.error:
                 # Handle cases where stdin is not a TTY
@@ -114,7 +149,8 @@ class InputHandler:
                                 return InputEvent("move", 1, 0)  # Right
                             elif next2 == "D":
                                 return InputEvent("move", -1, 0)  # Left
-                return None
+                # Single Esc key - return quit
+                return InputEvent("quit")
 
             # Handle movement keys
             if key in self.movement_keys:
@@ -134,6 +170,16 @@ class InputHandler:
                     return InputEvent("inventory")
                 elif action == "pickup":
                     return InputEvent("pickup")
+                elif action == "fire":
+                    return InputEvent("fire")
+                elif action == "stats":
+                    return InputEvent("stats")
+                elif action == "wait":
+                    return InputEvent("wait")
+                elif action == "help":
+                    return InputEvent("help")
+                elif action.startswith("cast_"):
+                    return InputEvent(action)
 
             return None
 
@@ -146,6 +192,28 @@ class InputHandler:
         """
         # Read a single character
         key = sys.stdin.read(1)
+
+        # Handle Escape Sequences (Arrow Keys)
+        if key == "\x1b":
+            # Check if there's more data (non-blocking read for sequence)
+            if select.select([sys.stdin], [], [], 0.01) == ([sys.stdin], [], []):
+                next1 = sys.stdin.read(1)
+                if next1 == "[":
+                    if select.select([sys.stdin], [], [], 0.01) == (
+                        [sys.stdin],
+                        [],
+                        [],
+                    ):
+                        next2 = sys.stdin.read(1)
+                        if next2 == "A":
+                            return InputEvent("move", 0, -1)  # Up
+                        elif next2 == "B":
+                            return InputEvent("move", 0, 1)  # Down
+                        elif next2 == "C":
+                            return InputEvent("move", 1, 0)  # Right
+                        elif next2 == "D":
+                            return InputEvent("move", -1, 0)  # Left
+            return InputEvent("quit")
 
         # Handle movement keys
         if key in self.movement_keys:
@@ -161,6 +229,20 @@ class InputHandler:
                 return InputEvent("action_menu")
             elif action == "select":
                 return InputEvent("select")
+            elif action == "inventory":
+                return InputEvent("inventory")
+            elif action == "pickup":
+                return InputEvent("pickup")
+            elif action == "fire":
+                return InputEvent("fire")
+            elif action == "stats":
+                return InputEvent("stats")
+            elif action == "wait":
+                return InputEvent("wait")
+            elif action == "help":
+                return InputEvent("help")
+            elif action.startswith("cast_"):
+                return InputEvent(action)
 
         # Return None for unrecognized keys
         return None
