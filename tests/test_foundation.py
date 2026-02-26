@@ -2,11 +2,7 @@
 Basic tests to verify the ECS foundation and data loading.
 """
 
-import pytest
-from core.ecs import EntityManager
 from entities.components import Position, Render, Health, Player, Monster
-from entities.entities import EntityManagerWrapper
-from data.loader import DATA_LOADER
 
 
 class TestECS:

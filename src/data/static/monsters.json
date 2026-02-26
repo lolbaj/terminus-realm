@@ -2,7 +2,7 @@
   "goblin": {
     "name": "Goblin",
     "char": "👺",
-    "fg_color": [255, 255, 255],
+    "fg_color": [100, 255, 100],
     "health": 20,
     "attack": 5,
     "defense": 1,
@@ -13,7 +13,7 @@
   "orc": {
     "name": "Orc",
     "char": "👹",
-    "fg_color": [255, 255, 255],
+    "fg_color": [255, 50, 50],
     "health": 40,
     "attack": 8,
     "defense": 2,
@@ -24,7 +24,7 @@
   "spider": {
     "name": "Spider",
     "char": "🕷️",
-    "fg_color": [255, 255, 255],
+    "fg_color": [200, 100, 255],
     "health": 10,
     "attack": 3,
     "defense": 0,
@@ -35,7 +35,7 @@
   "skeleton": {
     "name": "Skeleton",
     "char": "💀",
-    "fg_color": [255, 255, 255],
+    "fg_color": [240, 240, 240],
     "health": 15,
     "attack": 6,
     "defense": 1,
@@ -45,8 +45,8 @@
   },
   "bat": {
     "name": "Bat",
-    "char": "Bat",
-    "fg_color": [255, 255, 255],
+    "char": "🦇",
+    "fg_color": [150, 150, 150],
     "health": 5,
     "attack": 2,
     "defense": 0,
@@ -57,7 +57,7 @@
   "guard": {
     "name": "Guard",
     "char": "🛡️",
-    "fg_color": [255, 255, 255],
+    "fg_color": [50, 150, 255],
     "health": 30,
     "attack": 7,
     "defense": 5,
@@ -68,7 +68,7 @@
   "merchant": {
     "name": "Merchant",
     "char": "🤵",
-    "fg_color": [255, 255, 255],
+    "fg_color": [255, 215, 0],
     "health": 15,
     "attack": 3,
     "defense": 1,
@@ -79,7 +79,7 @@
   "citizen": {
     "name": "Citizen",
     "char": "👨",
-    "fg_color": [255, 255, 255],
+    "fg_color": [255, 200, 150],
     "health": 10,
     "attack": 1,
     "defense": 0,
@@ -90,7 +90,7 @@
   "dog": {
     "name": "Town Dog",
     "char": "🐕",
-    "fg_color": [255, 255, 255],
+    "fg_color": [210, 180, 140],
     "health": 8,
     "attack": 2,
     "defense": 0,
@@ -101,7 +101,7 @@
   "wolf": {
     "name": "Wolf",
     "char": "🐺",
-    "fg_color": [200, 200, 200],
+    "fg_color": [180, 180, 180],
     "health": 15,
     "attack": 4,
     "defense": 1,
@@ -123,7 +123,7 @@
   "scorpion": {
     "name": "Scorpion",
     "char": "🦂",
-    "fg_color": [210, 180, 140],
+    "fg_color": [255, 200, 50],
     "health": 12,
     "attack": 6,
     "defense": 2,
@@ -134,7 +134,7 @@
   "giant_ant": {
     "name": "Giant Ant",
     "char": "🐜",
-    "fg_color": [165, 42, 42],
+    "fg_color": [255, 100, 100],
     "health": 8,
     "attack": 3,
     "defense": 1,
@@ -144,8 +144,8 @@
   },
   "ice_slime": {
     "name": "Ice Slime",
-    "char": "❄️",
-    "fg_color": [173, 216, 230],
+    "char": "💧",
+    "fg_color": [150, 240, 255],
     "health": 15,
     "attack": 4,
     "defense": 2,
@@ -156,7 +156,7 @@
   "snow_wolf": {
     "name": "Snow Wolf",
     "char": "🐺",
-    "fg_color": [255, 255, 255],
+    "fg_color": [240, 245, 255],
     "health": 20,
     "attack": 6,
     "defense": 2,
@@ -167,7 +167,7 @@
   "yeti": {
     "name": "Yeti",
     "char": "🦍",
-    "fg_color": [240, 248, 255],
+    "fg_color": [255, 255, 255],
     "health": 80,
     "attack": 12,
     "defense": 5,
@@ -178,7 +178,7 @@
   "fire_imp": {
     "name": "Fire Imp",
     "char": "👿",
-    "fg_color": [255, 69, 0],
+    "fg_color": [255, 100, 50],
     "health": 20,
     "attack": 7,
     "defense": 1,
@@ -189,7 +189,7 @@
   "lava_golem": {
     "name": "Lava Golem",
     "char": "🗿",
-    "fg_color": [255, 0, 0],
+    "fg_color": [255, 80, 0],
     "health": 100,
     "attack": 15,
     "defense": 8,

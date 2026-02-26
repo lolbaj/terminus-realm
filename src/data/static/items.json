@@ -3,24 +3,24 @@
     "name": "Health Potion",
     "type": "consumable",
     "heal_amount": 20,
-    "char": "!",
-    "color": [255, 0, 255],
+    "char": "🧪",
+    "color": [255, 50, 100],
     "description": "Restores 20 HP when consumed."
   },
   "sword": {
     "name": "Iron Sword",
     "type": "weapon",
     "attack_bonus": 5,
-    "char": "/",
-    "color": [200, 200, 200],
+    "char": "⚔️",
+    "color": [200, 200, 210],
     "description": "A basic iron sword."
   },
   "shield": {
     "name": "Wooden Shield",
     "type": "armor",
     "defense_bonus": 3,
-    "char": "[",
-    "color": [139, 69, 19],
+    "char": "🛡️",
+    "color": [150, 100, 50],
     "description": "A simple wooden shield."
   }
 }

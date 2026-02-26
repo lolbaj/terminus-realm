@@ -17,6 +17,13 @@ class Position(Component):
 
 
 @dataclass(slots=True)
+class Name(Component):
+    """Name component for entities."""
+
+    value: str
+
+
+@dataclass(slots=True)
 class Render(Component):
     """Render component for entities."""
 
@@ -29,6 +36,14 @@ class Render(Component):
 @dataclass(slots=True)
 class Health(Component):
     """Health component for entities."""
+
+    current: int
+    maximum: int
+
+
+@dataclass(slots=True)
+class Mana(Component):
+    """Mana component for castable spells and active skills."""
 
     current: int
     maximum: int
@@ -188,3 +203,17 @@ class Shop(Component):
     def __post_init__(self):
         if self.items is None:
             self.items = []
+
+
+@dataclass(slots=True)
+class VFX(Component):
+    """Temporary visual effect component."""
+
+    type: str  # "float_text", "flash"
+    text: str = ""
+    color: Tuple[int, int, int] = (255, 255, 255)
+    duration: float = 1.0  # seconds
+    time_left: float = 1.0
+    x_offset: float = 0.0
+    y_offset: float = 0.0
+    target_eid: Optional[int] = None

@@ -2,7 +2,6 @@
 Tests for Phase 1 features: Movement, ECS foundation, and basic rendering.
 """
 
-import pytest
 from entities.components import Position, Player, Health, Render
 
 
@@ -140,9 +139,7 @@ class TestMovement:
             # Create a blocking entity in front of player
             # Note: This test documents the expected behavior
             # Actual blocking depends on spatial index implementation
-            blocker_id = entity_factory.create_monster(
-                initial_x + 1, initial_y, "goblin"
-            )
+            entity_factory.create_monster(initial_x + 1, initial_y, "goblin")
 
             # Try to move into blocker
             game_engine.move_player(1, 0)

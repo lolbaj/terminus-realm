@@ -6,7 +6,6 @@ import random
 import math
 from core.ecs import EntityManager
 from entities.entities import EntityFactory
-from entities.components import Position
 from world.map import GameMap
 from world.persistent_world import get_persistent_world
 
@@ -14,9 +13,15 @@ from world.persistent_world import get_persistent_world
 class SpawnSystem:
     """System for spawning NPCs and monsters."""
 
-    def __init__(self, entity_manager: EntityManager, entity_factory: EntityFactory):
+    def __init__(
+        self,
+        entity_manager: EntityManager,
+        entity_factory: EntityFactory,
+        spatial_index=None,
+    ):
         self.entity_manager = entity_manager
         self.entity_factory = entity_factory
+        self.spatial_index = spatial_index
         self.persistent_world = get_persistent_world()
         self.global_spawn_rates = {
             "goblin": 0.3,
@@ -25,15 +30,6 @@ class SpawnSystem:
             "skeleton": 0.15,
             "bat": 0.15,
         }
-
-    def _get_occupied_positions(self) -> set:
-        """Helper to get a set of all occupied positions."""
-        occupied = set()
-        for eid in self.entity_manager.entities:
-            pos = self.entity_manager.get_component(eid, Position)
-            if pos:
-                occupied.add((pos.x, pos.y))
-        return occupied
 
     def spawn_monsters_in_room(
         self,
@@ -46,26 +42,31 @@ class SpawnSystem:
     ):
         """Spawn monsters in a specific room area."""
         spawned = []
-        occupied = self._get_occupied_positions()
 
-        for _ in range(num_monsters):
-            # Find a walkable position in the room
-            valid_positions = []
-            for y in range(room_y1 + 1, room_y2):
-                for x in range(room_x1 + 1, room_x2):
-                    if game_map.is_walkable(x, y) and (x, y) not in occupied:
+        # Find all walkable positions in the room once
+        valid_positions = []
+        for y in range(room_y1 + 1, room_y2):
+            for x in range(room_x1 + 1, room_x2):
+                if game_map.is_walkable(x, y):
+                    if not self.spatial_index or not self.spatial_index.is_occupied(
+                        x, y
+                    ):
                         valid_positions.append((x, y))
 
-            if valid_positions:
-                x, y = random.choice(valid_positions)
-                occupied.add((x, y))  # Mark as occupied for next monster in same call
+        if not valid_positions:
+            return []
 
-                # Choose a monster type based on spawn rates
-                monster_type = self._choose_monster_type()
+        # Randomly sample without replacement if possible
+        count = min(num_monsters, len(valid_positions))
+        samples = random.sample(valid_positions, count)
 
-                # Create the monster
-                monster_id = self.entity_factory.create_monster(x, y, monster_type)
-                spawned.append(monster_id)
+        for x, y in samples:
+            # Choose a monster type based on spawn rates
+            monster_type = self._choose_monster_type(x, y)
+
+            # Create the monster
+            monster_id = self.entity_factory.create_monster(x, y, monster_type)
+            spawned.append(monster_id)
 
         return spawned
 
@@ -79,29 +80,29 @@ class SpawnSystem:
     ):
         """Spawn monsters around the player within a certain radius."""
         spawned = []
-        occupied = self._get_occupied_positions()
 
-        for _ in range(num_monsters):
+        # Try up to num_monsters * 2 times to find valid spots
+        for _ in range(num_monsters * 2):
+            if len(spawned) >= num_monsters:
+                break
+
             # Find a position near the player
-            angle = random.uniform(0, 2 * 3.14159)
+            angle = random.uniform(0, 2 * math.pi)
             distance = random.uniform(radius * 0.3, radius)
 
-            x = int(player_x + distance * round(math.cos(angle)))
-            y = int(player_y + distance * round(math.sin(angle)))
+            x = int(player_x + distance * math.cos(angle))
+            y = int(player_y + distance * math.sin(angle))
 
             # Make sure the position is within bounds and walkable
             if (
                 0 <= x < game_map.width
                 and 0 <= y < game_map.height
                 and game_map.is_walkable(x, y)
-                and (x, y) not in occupied
             ):
-                occupied.add((x, y))
-                monster_type = self._choose_monster_type(
-                    x, y
-                )  # Use biome-specific spawning
-                monster_id = self.entity_factory.create_monster(x, y, monster_type)
-                spawned.append(monster_id)
+                if not self.spatial_index or not self.spatial_index.is_occupied(x, y):
+                    monster_type = self._choose_monster_type(x, y)
+                    monster_id = self.entity_factory.create_monster(x, y, monster_type)
+                    spawned.append(monster_id)
 
         return spawned
 
@@ -131,29 +132,31 @@ class SpawnSystem:
     ):
         """Spawn monsters throughout the level."""
         spawned = []
-        occupied = self._get_occupied_positions()
 
         # Find all walkable positions
         walkable_positions = []
         for y in range(game_map.height):
             for x in range(game_map.width):
-                if game_map.is_walkable(x, y) and (x, y) not in occupied:
-                    walkable_positions.append((x, y))
+                if game_map.is_walkable(x, y):
+                    if not self.spatial_index or not self.spatial_index.is_occupied(
+                        x, y
+                    ):
+                        walkable_positions.append((x, y))
+
+        if not walkable_positions:
+            return []
 
         # Spawn monsters at random walkable positions
-        for _ in range(min(num_monsters, len(walkable_positions))):
-            if walkable_positions:
-                x, y = random.choice(walkable_positions)
-                walkable_positions.remove((x, y))
+        count = min(num_monsters, len(walkable_positions))
+        samples = random.sample(walkable_positions, count)
 
-                # Calculate world coordinates for correct biome lookup
-                # Note: With full map, chunk_x/y might be irrelevant or 0,0
-                # But we keep it compatible
-                world_x = x  # Assuming global coords for full map
-                world_y = y
+        for x, y in samples:
+            # Calculate world coordinates for correct biome lookup
+            world_x = x
+            world_y = y
 
-                monster_type = self._choose_monster_type(world_x, world_y)
-                monster_id = self.entity_factory.create_monster(x, y, monster_type)
-                spawned.append(monster_id)
+            monster_type = self._choose_monster_type(world_x, world_y)
+            monster_id = self.entity_factory.create_monster(x, y, monster_type)
+            spawned.append(monster_id)
 
         return spawned

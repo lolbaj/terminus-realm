@@ -15,14 +15,11 @@ import sys
 import os
 import cProfile
 import pstats
-import io
-from pathlib import Path
 
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from core.engine import GameEngine
-from config import CONFIG
 
 
 def run_simulation(num_updates: int = 100) -> GameEngine:

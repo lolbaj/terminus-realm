@@ -98,23 +98,23 @@ class InputHandler:
         self.original_settings = None
 
     def setup_terminal(self):
-        """Setup terminal for non-blocking input."""
+        """Setup terminal for non-blocking input and clean UI."""
         try:
             self.original_settings = termios.tcgetattr(sys.stdin)
             tty.setcbreak(sys.stdin)
-            # Hide cursor
-            sys.stdout.write("\033[?25l")
+            # Enter alternate screen, hide cursor, disable wrap
+            sys.stdout.write("\033[?1049h\033[?25l\033[?7l")
             sys.stdout.flush()
         except (termios.error, io.UnsupportedOperation):
             # Handle cases where stdin is not a TTY (e.g., when running tests)
             self.original_settings = None
 
     def restore_terminal(self):
-        """Restore terminal to original settings."""
+        """Restore terminal to original settings and exit alternate screen."""
         if self.original_settings:
             try:
-                # Show cursor
-                sys.stdout.write("\033[?25h")
+                # Show cursor, exit alternate screen, enable wrap
+                sys.stdout.write("\033[?25h\033[?1049l\033[?7h")
                 sys.stdout.flush()
                 termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.original_settings)
             except termios.error:
@@ -131,15 +131,12 @@ class InputHandler:
 
             # Handle Escape Sequences (Arrow Keys)
             if key == "\x1b":
-                # Check if there's more data (non-blocking read for sequence)
-                if select.select([sys.stdin], [], [], 0.01) == ([sys.stdin], [], []):
+                # Check for additional characters in the escape sequence
+                # We use a small timeout to gather the sequence parts
+                if select.select([sys.stdin], [], [], 0.05) == ([sys.stdin], [], []):
                     next1 = sys.stdin.read(1)
                     if next1 == "[":
-                        if select.select([sys.stdin], [], [], 0.01) == (
-                            [sys.stdin],
-                            [],
-                            [],
-                        ):
+                        if select.select([sys.stdin], [], [], 0.05) == ([sys.stdin], [], []):
                             next2 = sys.stdin.read(1)
                             if next2 == "A":
                                 return InputEvent("move", 0, -1)  # Up
@@ -149,10 +146,13 @@ class InputHandler:
                                 return InputEvent("move", 1, 0)  # Right
                             elif next2 == "D":
                                 return InputEvent("move", -1, 0)  # Left
-                # Single Esc key - return quit
-                return InputEvent("quit")
+                    # If it's an unrecognized escape sequence or just single Esc
+                    return InputEvent("quit")
+                else:
+                    # Single Esc key - return quit
+                    return InputEvent("quit")
 
-            # Handle movement keys
+            # Handle movement keys from config/default
             if key in self.movement_keys:
                 dx, dy = self.movement_keys[key]
                 return InputEvent("move", dx, dy)
@@ -195,15 +195,11 @@ class InputHandler:
 
         # Handle Escape Sequences (Arrow Keys)
         if key == "\x1b":
-            # Check if there's more data (non-blocking read for sequence)
-            if select.select([sys.stdin], [], [], 0.01) == ([sys.stdin], [], []):
+            # Check for sequence
+            if select.select([sys.stdin], [], [], 0.05) == ([sys.stdin], [], []):
                 next1 = sys.stdin.read(1)
                 if next1 == "[":
-                    if select.select([sys.stdin], [], [], 0.01) == (
-                        [sys.stdin],
-                        [],
-                        [],
-                    ):
+                    if select.select([sys.stdin], [], [], 0.05) == ([sys.stdin], [], []):
                         next2 = sys.stdin.read(1)
                         if next2 == "A":
                             return InputEvent("move", 0, -1)  # Up

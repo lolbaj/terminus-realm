@@ -9,6 +9,8 @@ from world.map import (
     TILE_WALL,
 )
 import random
+import threading
+from queue import Queue
 
 
 class Chunk:
@@ -51,7 +53,7 @@ class Chunk:
 
 
 class ChunkManager:
-    """Manages world chunks with a rolling buffer system."""
+    """Manages world chunks with an asynchronous rolling buffer system."""
 
     def __init__(self, chunk_size: int = 32, buffer_radius: int = 1):
         self.chunk_size = chunk_size
@@ -64,6 +66,27 @@ class ChunkManager:
         # Track which chunks are in the active area
         self.active_chunks: Set[Tuple[int, int]] = set()
 
+        # Async Loading
+        self.loading_queue = Queue()
+        self.lock = threading.Lock()
+        self.worker_thread = threading.Thread(target=self._worker, daemon=True)
+        self.worker_thread.start()
+
+    def _worker(self):
+        """Background thread for loading chunks."""
+        while True:
+            coords = self.loading_queue.get()
+            if coords is None:
+                break
+
+            # Perform expensive chunk initialization
+            chunk = Chunk(coords[0], coords[1], self.chunk_size)
+
+            with self.lock:
+                self.loaded_chunks[coords] = chunk
+
+            self.loading_queue.task_done()
+
     def get_chunk_coords(self, world_x: int, world_y: int) -> Tuple[int, int]:
         """Convert world coordinates to chunk coordinates."""
         chunk_x = world_x // self.chunk_size
@@ -71,14 +94,14 @@ class ChunkManager:
         return (chunk_x, chunk_y)
 
     def get_chunk(self, chunk_x: int, chunk_y: int) -> Optional[Chunk]:
-        """Get a chunk by its coordinates, loading it if necessary."""
+        """Get a chunk by its coordinates, loading it if necessary (synchronous fallback)."""
         coords = (chunk_x, chunk_y)
 
-        if coords not in self.loaded_chunks:
-            # Load the chunk
-            self.loaded_chunks[coords] = Chunk(chunk_x, chunk_y, self.chunk_size)
-
-        return self.loaded_chunks[coords]
+        with self.lock:
+            if coords not in self.loaded_chunks:
+                # Synchronous fallback if requested chunk isn't loaded yet
+                self.loaded_chunks[coords] = Chunk(chunk_x, chunk_y, self.chunk_size)
+            return self.loaded_chunks[coords]
 
     def get_tile_at(self, world_x: int, world_y: int):
         """Get the tile at the given world coordinates."""
@@ -95,7 +118,6 @@ class ChunkManager:
                 return chunk.map.tiles[local_y, local_x]
 
         # Return a default wall tile if coordinates are out of bounds
-
         return TILE_WALL
 
     def is_walkable(self, world_x: int, world_y: int) -> bool:
@@ -127,7 +149,7 @@ class ChunkManager:
         return False
 
     def update_active_area(self, center_chunk_x: int, center_chunk_y: int):
-        """Update the active area around the given center chunk."""
+        """Update the active area around the given center chunk asynchronously."""
         # Remember old active chunks to unload them later
         old_active_chunks = self.active_chunks.copy()
 
@@ -138,17 +160,19 @@ class ChunkManager:
                 chunk_coords = (center_chunk_x + dx, center_chunk_y + dy)
                 self.active_chunks.add(chunk_coords)
 
-                # Ensure the chunk is loaded
-                if chunk_coords not in self.loaded_chunks:
-                    self.loaded_chunks[chunk_coords] = Chunk(
-                        chunk_coords[0], chunk_coords[1], self.chunk_size
-                    )
+                # Queue the chunk for loading if not already loaded or in queue
+                with self.lock:
+                    if chunk_coords not in self.loaded_chunks:
+                        # Simple check to avoid double-queuing:
+                        # In a real app, use a 'being_loaded' set.
+                        self.loading_queue.put(chunk_coords)
 
         # Unload chunks that are no longer in the active area
         chunks_to_unload = old_active_chunks - self.active_chunks
         for chunk_coords in chunks_to_unload:
-            if chunk_coords in self.loaded_chunks:
-                del self.loaded_chunks[chunk_coords]
+            with self.lock:
+                if chunk_coords in self.loaded_chunks:
+                    del self.loaded_chunks[chunk_coords]
 
         self.active_area = (center_chunk_x, center_chunk_y)
 
@@ -160,7 +184,8 @@ class ChunkManager:
 
     def get_loaded_chunk_count(self) -> int:
         """Get the number of currently loaded chunks."""
-        return len(self.loaded_chunks)
+        with self.lock:
+            return len(self.loaded_chunks)
 
     def get_tile_char(self, world_x: int, world_y: int, visible: bool = True):
         """Get the character representation of a tile at world coordinates."""

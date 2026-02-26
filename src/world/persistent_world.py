@@ -427,10 +427,8 @@ class PersistentWorld:
 
     def get_full_game_map(self) -> GameMap:
         """Get the entire world as a single GameMap for seamless play."""
-        game_map = GameMap(self.world_width, self.world_height)
-
-        # Direct copy (Fastest)
-        game_map.tiles[:] = self.world_map[:]
+        # Instantiate with direct reference to world_map to avoid allocation
+        game_map = GameMap(self.world_width, self.world_height, tiles=self.world_map)
 
         # Initialize explored status based on some logic if needed?
         # For now, it defaults to False (Hidden)

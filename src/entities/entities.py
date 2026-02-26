@@ -4,8 +4,10 @@ from core.ecs import EntityManager
 from data.loader import DATA_LOADER
 from entities.components import (
     Position,
+    Name,
     Render,
     Health,
+    Mana,
     Player,
     Monster,
     Combat,
@@ -83,6 +85,7 @@ class EntityFactory:
             shop_items = [("health_potion", 50), ("sword", 100)]
 
         self.entity_manager.add_component(eid, Position(x=x, y=y))
+        self.entity_manager.add_component(eid, Name(value=name))
         self.entity_manager.add_component(
             eid, Render(char="💰", fg_color=(255, 215, 0))
         )
@@ -117,10 +120,12 @@ class EntityFactory:
 
         # Add components
         self.entity_manager.add_component(eid, Position(x=x, y=y))
+        self.entity_manager.add_component(eid, Name(value="Adventurer"))
         self.entity_manager.add_component(
-            eid, Render(char="🧙", fg_color=(255, 255, 255))
+            eid, Render(char="🧙", fg_color=(100, 200, 255))
         )
         self.entity_manager.add_component(eid, Health(current=500, maximum=500))
+        self.entity_manager.add_component(eid, Mana(current=100, maximum=100))
         self.entity_manager.add_component(
             eid, Combat(attack_power=0, defense=0)
         )  # Combat now derived from Skills
@@ -159,6 +164,7 @@ class EntityFactory:
 
         # Add components
         self.entity_manager.add_component(eid, Position(x=x, y=y))
+        self.entity_manager.add_component(eid, Name(value=data.get("name", "Unknown")))
 
         # Color tuple conversion
         fg_color = tuple(data.get("fg_color", [255, 255, 255]))
@@ -333,9 +339,10 @@ class EntityFactory:
 class EntityManagerWrapper:
     """Wrapper for entity management with convenience methods."""
 
-    def __init__(self, entity_manager: EntityManager):
+    def __init__(self, entity_manager: EntityManager, spatial_index=None):
         self.entity_manager = entity_manager
         self.factory = EntityFactory(entity_manager)
+        self.spatial_index = spatial_index
 
     def get_player(self) -> int:
         """Get the player entity ID."""
@@ -346,6 +353,10 @@ class EntityManagerWrapper:
 
     def get_monsters_at_position(self, x: int, y: int) -> List[int]:
         """Get all monsters at a specific position."""
+        if self.spatial_index:
+            return self.spatial_index.get_monsters_at(x, y)
+
+        # Fallback to linear scan if no spatial index
         monsters = self.entity_manager.get_entities_with_components(Monster)
         result = []
 
@@ -358,6 +369,10 @@ class EntityManagerWrapper:
 
     def get_items_at_position(self, x: int, y: int) -> List[int]:
         """Get all items at a specific position."""
+        if self.spatial_index:
+            return self.spatial_index.get_items_at(x, y)
+
+        # Fallback to linear scan if no spatial index
         # Items don't have a specific component yet, so we'll look for entities
         # that have Position and Render but not Player/Monster
         all_entities = self.entity_manager.entities.keys()

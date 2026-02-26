@@ -2,10 +2,8 @@
 Tests for Phase 3: World Expansion - Chunk System and Procedural Generation.
 """
 
-import pytest
-from world.chunk_manager import ChunkManager, Chunk
+from world.chunk_manager import Chunk
 from world.persistent_world import PersistentWorld
-from world.map import TILE_FLOOR, TILE_WALL
 
 
 class TestChunkCreation:
@@ -148,7 +146,7 @@ class TestRollingBuffer:
         # Load chunks at (0, 0)
         chunk_manager.update_active_area(0, 0)
         time.sleep(0.1)
-        initial_count = chunk_manager.get_loaded_chunk_count()
+        chunk_manager.get_loaded_chunk_count()
 
         # Move far away
         chunk_manager.update_active_area(10, 10)
@@ -207,7 +205,7 @@ class TestProceduralGeneration:
 
         # Different chunks should generally have different content
         # (They might be similar due to noise, but unlikely identical)
-        maps_different = not (chunk1.map.tiles == chunk2.map.tiles).all()
+        not (chunk1.map.tiles == chunk2.map.tiles).all()
         # Note: This might fail if noise produces similar patterns
         # It's more of a documentation test
 

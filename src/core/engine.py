@@ -8,7 +8,7 @@ from collections import deque
 from rich.console import Console
 from core.ecs import EntityManager, SystemManager
 from config import CONFIG
-from world.map import GameMap
+from world.map import GameMap, CHAR_MAP
 from entities.entities import EntityManagerWrapper
 from entities.components import Position
 from ui.renderer import Renderer
@@ -17,6 +17,7 @@ from entities.spawn_system import SpawnSystem
 from entities.ai_system import AISystem
 from entities.boss_system import BossSystem
 from world.fov import calculate_fov
+from core.spatial import SpatialIndex
 
 
 class GameEngine:
@@ -41,6 +42,11 @@ class GameEngine:
         self.entity_wrapper = EntityManagerWrapper(self.entity_manager)
         self.player_id: Optional[int] = None
 
+        # Initialize spatial index
+        self.spatial_index = SpatialIndex(self.entity_manager)
+        # Inject spatial index into wrapper
+        self.entity_wrapper.spatial_index = self.spatial_index
+
         # Initialize rendering
         import shutil
 
@@ -56,7 +62,7 @@ class GameEngine:
 
         # Initialize spawn system
         self.spawn_system = SpawnSystem(
-            self.entity_manager, self.entity_wrapper.factory
+            self.entity_manager, self.entity_wrapper.factory, self.spatial_index
         )
 
         # Initialize AI system
@@ -65,8 +71,14 @@ class GameEngine:
         # Initialize boss system
         self.boss_system = BossSystem(self.entity_manager, self.entity_wrapper.factory)
 
-        # AI Timer
+        # VFX system
+        from entities.vfx_system import VFXSystem
+
+        self.vfx_system = VFXSystem(self.entity_manager)
+
+        # Timers
         self.ai_timer = 0.0
+        self.mana_regen_timer = 0.0
 
         # Message Log
         self.message_log = deque(maxlen=5)
@@ -76,6 +88,7 @@ class GameEngine:
         self.game_state = "PLAYING"  # PLAYING, INVENTORY
         self.inventory_selection = 0
         self.current_shop_id = None
+        self._last_fov_pos = None
 
     def update_fov(self):
         """Update the field of view based on player position."""
@@ -84,6 +97,12 @@ class GameEngine:
 
         pos = self.entity_manager.get_component(self.player_id, Position)
         if pos:
+            # Check if player has moved
+            current_pos = (pos.x, pos.y)
+            if self._last_fov_pos == current_pos:
+                return
+
+            self._last_fov_pos = current_pos
             fov_radius = 8  # Default radius
             fov_array = calculate_fov(self.game_map, pos.x, pos.y, fov_radius)
             self.game_map.update_fov(fov_array)
@@ -95,7 +114,7 @@ class GameEngine:
     def run(self):
         """Run the main game loop."""
         print("Game engine started...")
-        print("Controls: WASD/Arrows to move, Space for Menu, E to Select, P to quit")
+        print("Controls: WASD/Arrows to move, Space/Enter for Actions, ? for Help")
         print("Note: Diagonal movement uses Q, E, Z, C around the WASD keys.")
 
         # Initialize the game
@@ -131,6 +150,8 @@ class GameEngine:
             except Exception as e:
                 import traceback
 
+                self.input_handler.restore_terminal()
+
                 with open("game_debug.log", "a") as f:
                     f.write(
                         f"Loop Crash at iteration {loop_count}: {e}\n{traceback.format_exc()}\n"
@@ -154,7 +175,7 @@ class GameEngine:
                 if not maps:
                     raise ValueError("No maps found in file")
 
-                # Assume first map for now or we could add another arg for map name
+                # assume first map for now or we could add another arg for map name
                 m_data = maps[0]
                 layout = m_data["layout"].strip().split("\n")
                 h = len(layout)
@@ -162,35 +183,14 @@ class GameEngine:
 
                 self.game_map = GameMap(w, h)
 
-                # Char mapping
-                # TODO: Centralize this mapping
-                char_map = {
-                    ".": 0,
-                    " ": 0,  # Floor
-                    "#": 1,  # Wall
-                    "+": 2,  # Door
-                    "~": 3,  # Water
-                    ",": 4,  # Grass
-                    "T": 5,  # Tree
-                    "S": 8,  # Sand
-                    "P": 9,  # Pavement
-                    "*": 10,  # Snow
-                    "=": 11,  # Lava
-                    "A": 12,  # Ash
-                    "C": 13,  # Cactus
-                    "I": 14,  # Ice
-                }
-
                 for y, row in enumerate(layout):
                     for x, char in enumerate(row):
                         if x < w:
-                            tid = char_map.get(char, 0)  # Default to floor
-                            # Handle special characters
-                            if char in "║═╚╔╗╝╠╦╣╩╬█":
-                                tid = 1
-                            elif char == "@":
+                            if char == "@":
                                 self.override_start_pos = (x, y)
                                 tid = 0
+                            else:
+                                tid = CHAR_MAP.get(char, 0)  # Default to floor
 
                             self.game_map.tiles[y, x] = tid
 
@@ -336,6 +336,9 @@ class GameEngine:
         # Update all systems
         self.system_manager.update_all(dt)
 
+        # Update VFX system
+        self.vfx_system.update(dt)
+
         # Handle any game-specific updates
         self.handle_updates(dt)
 
@@ -355,21 +358,26 @@ class GameEngine:
 
     def handle_updates(self, dt: float):
         """Handle game-specific updates."""
-        # FOV update removed (Game is fully visible)
-
         # Get player position once for all updates
         player_pos = self.entity_manager.get_component(self.player_id, Position)
 
-        # Update AI for monsters (Throttled)
-        self.ai_timer += dt
-        if self.ai_timer >= CONFIG.ai_move_delay:
-            if player_pos:
+        # Update AI for monsters (Batched across multiple frames)
+        if player_pos:
 
-                def combat_callback(attacker_id):
-                    self.handle_combat(attacker_id, self.player_id)
+            def combat_callback(attacker_id):
+                self.handle_combat(attacker_id, self.player_id)
 
-                self.ai_system.update(self.game_map, player_pos, combat_callback)
-            self.ai_timer = 0.0
+            # Calculate number of batches based on move delay and target FPS
+            # e.g., 0.5s delay @ 30fps = 15 batches
+            num_batches = max(1, int(CONFIG.ai_move_delay * CONFIG.target_fps))
+
+            self.ai_system.update(
+                self.game_map,
+                player_pos,
+                self.spatial_index,
+                combat_callback,
+                num_batches=num_batches,
+            )
 
         # Check for boss encounters
         if player_pos:
@@ -377,9 +385,23 @@ class GameEngine:
                 player_pos.x, player_pos.y
             )
             if boss_encounter:
-                print(f"Danger approaches: {boss_encounter.name} is nearby!")
-                # Optionally trigger the boss encounter here
-                # self.boss_system.trigger_boss_encounter(boss_encounter)
+                self.log(
+                    f"Danger approaches: {boss_encounter.name} is nearby!",
+                    (255, 50, 50),
+                )
+                self.boss_system.trigger_boss_encounter(boss_encounter)
+
+        # Mana regeneration
+        self.mana_regen_timer += dt
+
+        if self.mana_regen_timer >= 1.0:  # Regen every 1 second
+            self.mana_regen_timer -= 1.0
+            from entities.components import Mana
+
+            if self.player_id is not None:
+                mana = self.entity_manager.get_component(self.player_id, Mana)
+                if mana and mana.current < mana.maximum:
+                    mana.current = min(mana.maximum, mana.current + 2)
 
     def handle_input(self, event: InputEvent):
         """Handle input events based on game state."""
@@ -405,9 +427,19 @@ class GameEngine:
             elif event.action_type == "inventory":
                 self.game_state = "INVENTORY"
                 self.inventory_selection = 0
+            elif event.action_type == "stats":
+                self.game_state = "STATS"
+                self.inventory_selection = 0  # Re-use for menu index
+            elif event.action_type == "help":
+                self.game_state = "HELP"
             elif event.action_type == "fire":
                 self.game_state = "TARGETING"
                 self.log("Select direction to attack...", (255, 255, 0))
+            elif event.action_type == "wait":
+                self.log("You wait...", (150, 150, 150))
+            elif event.action_type.startswith("cast_"):
+                skill_num = int(event.action_type.split("_")[1])
+                self.handle_skill_cast(skill_num)
 
         elif self.game_state == "TARGETING":
             if event.action_type == "move":
@@ -416,6 +448,11 @@ class GameEngine:
             else:
                 self.game_state = "PLAYING"
                 self.log("Canceled.", (150, 150, 150))
+
+        elif self.game_state == "HELP":
+            if event.action_type:
+                # Any key to close help
+                self.game_state = "PLAYING"
 
         elif self.game_state == "INVENTORY":
             if event.action_type == "move":
@@ -430,14 +467,198 @@ class GameEngine:
             elif event.action_type == "select":
                 # Use/Equip item
                 self.use_inventory_item()
-            elif event.action_type == "action_menu" or event.action_type == "inventory":
+            elif event.action_type in ("action_menu", "inventory"):
                 # Close inventory
                 self.game_state = "PLAYING"
 
+        elif self.game_state == "STATS":
+            if event.action_type == "move":
+                if event.dy > 0:
+                    self.inventory_selection = (self.inventory_selection + 1) % 4
+                elif event.dy < 0:
+                    self.inventory_selection = (self.inventory_selection - 1) % 4
+            elif event.action_type in ("quit", "stats"):
+                self.game_state = "PLAYING"
+            elif event.action_type == "select":
+                self.allocate_stat()
+
         elif self.game_state == "SHOPPING":
-            if event.action_type == "quit" or event.action_type == "action_menu":
+            if event.action_type in ("quit", "action_menu"):
                 self.game_state = "PLAYING"
                 self.log("You leave the shop.", (200, 200, 200))
+
+    def handle_skill_cast(self, skill_num: int):
+        """Handle casting of active skills."""
+        from entities.components import Mana, Health, Position, Monster
+        import random
+
+        if self.player_id is None:
+            return
+
+        mana = self.entity_manager.get_component(self.player_id, Mana)
+        health = self.entity_manager.get_component(self.player_id, Health)
+        pos = self.entity_manager.get_component(self.player_id, Position)
+
+        if not mana or not health or not pos:
+            return
+
+        if skill_num == 1:
+            # Heal Skill (Cost 20 Mana, Heals 50 HP)
+            cost = 20
+            if mana.current < cost:
+                self.log("Not enough mana for Heal!", (150, 150, 255))
+                return
+
+            mana.current -= cost
+            heal_amount = 50
+            health.current = min(health.maximum, health.current + heal_amount)
+            self.log(f"Cast Heal! Restored {heal_amount} HP.", (100, 255, 100))
+            self.vfx_system.add_floating_text(pos.x, pos.y, "+HP", (100, 255, 100))
+
+        elif skill_num == 2:
+            # Fireball (Cost 25 Mana, AoE damage around player)
+            cost = 25
+            if mana.current < cost:
+                self.log("Not enough mana for Fireball!", (150, 150, 255))
+                return
+
+            mana.current -= cost
+            self.log("Cast Fireball! Flames erupt!", (255, 100, 50))
+
+            # Find monsters in radius 3
+            radius = 3
+            hit = False
+            for dx in range(-radius, radius + 1):
+                for dy in range(-radius, radius + 1):
+                    if dx * dx + dy * dy <= radius * radius:
+                        tx, ty = pos.x + dx, pos.y + dy
+                        monsters = self.entity_wrapper.get_monsters_at_position(tx, ty)
+                        for mid in monsters:
+                            # Direct damage
+                            m_hp = self.entity_manager.get_component(mid, Health)
+                            if m_hp:
+                                dmg = 30
+                                m_hp.current -= dmg
+                                self.vfx_system.add_floating_text(
+                                    tx, ty, str(dmg), (255, 100, 50)
+                                )
+                                self.vfx_system.add_hit_flash(
+                                    mid, (255, 100, 0), duration=0.2
+                                )
+                                hit = True
+
+                                # Check death
+                                if m_hp.current <= 0:
+                                    m_comp = self.entity_manager.get_component(
+                                        mid, Monster
+                                    )
+                                    name = m_comp.name if m_comp else "Monster"
+                                    self.log(f"{name} is incinerated!", (255, 50, 50))
+                                    if m_comp:
+                                        self.gain_xp(self.player_id, m_comp.xp_reward)
+                                        # Random chance to drop item
+                                        if random.random() < 0.2:
+                                            drop_type = random.choice(
+                                                [
+                                                    "health_potion",
+                                                    "sword",
+                                                    "shield",
+                                                    "bow",
+                                                    "wand",
+                                                ]
+                                            )
+                                            self.entity_wrapper.factory.create_item(
+                                                tx, ty, drop_type
+                                            )
+                                            self.log(
+                                                "Something dropped!", (255, 215, 0)
+                                            )
+                                    self.entity_manager.destroy_entity(mid)
+
+            if not hit:
+                self.log("The fireball hits nothing.", (150, 150, 150))
+
+        elif skill_num == 3:
+            # Teleport/Blink (Cost 30 Mana, random nearby free tile)
+            cost = 30
+            if mana.current < cost:
+                self.log("Not enough mana for Blink!", (150, 150, 255))
+                return
+
+            radius = 5
+            tries = 0
+            while tries < 10:
+                dx = random.randint(-radius, radius)
+                dy = random.randint(-radius, radius)
+                tx, ty = pos.x + dx, pos.y + dy
+
+                # Check bounds and walkability
+                if (
+                    0 <= tx < self.game_map.width
+                    and 0 <= ty < self.game_map.height
+                    and self.game_map.is_walkable(tx, ty)
+                ):
+
+                    mana.current -= cost
+                    self.vfx_system.add_floating_text(
+                        pos.x, pos.y, "Poof!", (200, 200, 255)
+                    )
+                    pos.x = tx
+                    pos.y = ty
+
+                    # Notify ECS so spatial index updates
+                    self.entity_manager.notify_component_change(
+                        self.player_id, Position
+                    )
+                    self.update_fov()
+                    self.log("You blink to a new location!", (200, 200, 255))
+                    return
+                tries += 1
+            self.log("Blink failed, no safe spot found.", (150, 150, 150))
+
+    def allocate_stat(self):
+        """Allocate an attribute point."""
+        from entities.components import Level, Combat, Health, Mana
+
+        if self.player_id is None:
+            return
+
+        level_comp = self.entity_manager.get_component(self.player_id, Level)
+        if not level_comp or level_comp.attribute_points <= 0:
+            self.log("No attribute points to spend!", (150, 150, 150))
+            return
+
+        level_comp.attribute_points -= 1
+
+        # 0: Str (Atk), 1: Dex (Def), 2: Vit (HP), 3: Int (MP)
+        if self.inventory_selection == 0:
+            combat = self.entity_manager.get_component(self.player_id, Combat)
+            if combat:
+                combat.attack_power += 2
+                self.log("Strength Up! Attack +2", (255, 100, 100))
+        elif self.inventory_selection == 1:
+            combat = self.entity_manager.get_component(self.player_id, Combat)
+            if combat:
+                combat.defense += 1
+                self.log("Dexterity Up! Defense +1", (100, 255, 100))
+        elif self.inventory_selection == 2:
+            health = self.entity_manager.get_component(self.player_id, Health)
+            if health:
+                health.maximum += 20
+                health.current += 20
+                self.log("Vitality Up! HP +20", (255, 50, 50))
+        elif self.inventory_selection == 3:
+            mana = self.entity_manager.get_component(self.player_id, Mana)
+            if mana:
+                mana.maximum += 15
+                mana.current += 15
+                self.log("Intelligence Up! MP +15", (50, 100, 255))
+
+        # Keep menu open if points remain, otherwise close it?
+        # Let's keep it open for convenience.
+        if level_comp.attribute_points <= 0:
+            self.game_state = "PLAYING"
+            self.log("All points allocated.", (200, 200, 200))
 
     def check_for_attack(self) -> bool:
         """Check for adjacent monsters and attack if found."""
@@ -450,8 +671,17 @@ class GameEngine:
         if not pos:
             return False
 
-        # Check all 4 neighbors
-        for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+        # Check all neighbors (including diagonals)
+        for dx, dy in [
+            (0, 1),
+            (0, -1),
+            (1, 0),
+            (-1, 0),
+            (1, 1),
+            (1, -1),
+            (-1, 1),
+            (-1, -1),
+        ]:
             nx, ny = pos.x + dx, pos.y + dy
 
             # Check for monsters
@@ -477,8 +707,17 @@ class GameEngine:
         if not pos:
             return False
 
-        # Check all 4 neighbors
-        for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+        # Check all neighbors (including diagonals)
+        for dx, dy in [
+            (0, 1),
+            (0, -1),
+            (1, 0),
+            (-1, 0),
+            (1, 1),
+            (1, -1),
+            (-1, 1),
+            (-1, -1),
+        ]:
             nx, ny = pos.x + dx, pos.y + dy
 
             # Check for entities at neighbor
@@ -744,6 +983,7 @@ class GameEngine:
             # Update the player's position
             pos.x = new_x
             pos.y = new_y
+            self.entity_manager.notify_component_change(self.player_id, Position)
 
             # Update FOV after movement
             self.update_fov()
@@ -845,6 +1085,24 @@ class GameEngine:
 
         defender_health.current -= damage
 
+        # Visual Effects
+        def_pos = self.entity_manager.get_component(defender_id, Position)
+        if def_pos:
+            # Floating damage number
+            vfx_color = (255, 50, 50) if damage > 0 else (150, 150, 150)
+            self.vfx_system.add_floating_text(
+                def_pos.x, def_pos.y, str(damage) if damage > 0 else "Miss", vfx_color
+            )
+            # Hit flash
+            if damage > 0:
+                self.vfx_system.add_hit_flash(
+                    defender_id, (255, 255, 255), duration=0.1
+                )
+
+                # Screen shake if player was hit
+                if self.entity_manager.has_component(defender_id, Player):
+                    self.renderer.trigger_shake(3)
+
         # Apply Vampiric Effect
         if "Vampiric" in weapon_affixes and damage > 0:
             attacker_health = self.entity_manager.get_component(attacker_id, Health)
@@ -939,7 +1197,7 @@ class GameEngine:
 
     def gain_xp(self, entity_id: int, amount: int):
         """Give XP to an entity and handle leveling up."""
-        from entities.components import Level, Combat, Health
+        from entities.components import Level, Combat, Health, Mana
 
         level_comp = self.entity_manager.get_component(entity_id, Level)
         if level_comp:
@@ -951,23 +1209,29 @@ class GameEngine:
                 level_comp.current_level += 1
                 level_comp.current_xp -= level_comp.xp_to_next_level
                 level_comp.xp_to_next_level = int(level_comp.xp_to_next_level * 1.5)
+                level_comp.attribute_points += 5
 
-                # Increase stats
+                # Keep small automatic gains
                 combat_comp = self.entity_manager.get_component(entity_id, Combat)
                 health_comp = self.entity_manager.get_component(entity_id, Health)
+                mana_comp = self.entity_manager.get_component(entity_id, Mana)
 
                 if combat_comp:
-                    combat_comp.attack_power += 2
                     combat_comp.defense += 1
 
                 if health_comp:
-                    health_comp.maximum += 20
-                    health_comp.current = health_comp.maximum  # Full heal on level up
+                    health_comp.maximum += 10
+                    health_comp.current = health_comp.maximum
+
+                if mana_comp:
+                    mana_comp.maximum += 5
+                    mana_comp.current = mana_comp.maximum
 
                 self.log(
                     f"LEVEL UP! Now Level {level_comp.current_level}!", (255, 215, 0)
                 )
-                self.log("HP+20, Atk+2, Def+1", (255, 255, 0))
+                self.log("HP+10, MP+5, Def+1, +5 Stat Points!", (255, 255, 0))
+                self.log("Press 'k' to allocate points.", (200, 200, 255))
 
     def throttle_framerate(self):
         """Throttle the framerate to stabilize rendering."""

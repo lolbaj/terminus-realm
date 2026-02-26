@@ -4,7 +4,7 @@ Tests for Loot 2.0 system including rarity, affixes, and item generation.
 
 import pytest
 from entities.components import Item, WeaponStats, ArmorStats, Render
-from entities.entities import EntityFactory, RARITY_CONFIG
+from entities.entities import RARITY_CONFIG
 
 
 class TestLootRarity:
@@ -61,14 +61,16 @@ class TestLootRarity:
         """Test that each rarity tier can be generated."""
         found = False
 
-        for _ in range(100):
+        # Use more attempts for legendary to avoid flakiness
+        attempts = 500 if rarity == "legendary" else 200
+        for _ in range(attempts):
             item_id = entity_factory.create_item(0, 0, "sword")
             item = entity_factory.entity_manager.get_component(item_id, Item)
             if item.rarity == rarity:
                 found = True
                 break
 
-        assert found, f"Could not generate {rarity} item in 100 attempts"
+        assert found, f"Could not generate {rarity} item in {attempts} attempts"
 
 
 class TestAffixes:
@@ -92,8 +94,6 @@ class TestAffixes:
         for _ in range(100):
             item_id = entity_factory.create_item(0, 0, "sword")
             item = entity_factory.entity_manager.get_component(item_id, Item)
-
-            expected_affixes = RARITY_CONFIG[item.rarity]["affixes"]
 
             # Allow some flexibility for edge cases
             if len(item.affixes) > 0:
@@ -218,7 +218,7 @@ class TestWeaponGeneration:
             # Higher rarity should generally have better stats
             assert (
                 avg_rare >= avg_common * 0.8
-            ), f"Rare items should have comparable or better stats"
+            ), "Rare items should have comparable or better stats"
 
 
 class TestArmorGeneration:

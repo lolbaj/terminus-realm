@@ -1083,15 +1083,19 @@ class Renderer:
                 )
 
     def _output_buffer(self, buffer: np.ndarray):
-        """Output the render buffer to the terminal using incremental updates."""
+        """Output the render buffer to the terminal using stable incremental updates."""
         import sys
 
         # Initial output sequence
-        output_parts = []
+        render_commands = []
 
-        # Cache last color to reduce escape codes
+        # Optimization: Cache last color to reduce escape codes
         last_fg = (-1, -1, -1)
         last_bg = (-1, -1, -1)
+
+        # Track virtual cursor position to avoid redundant moves
+        v_cursor_y = -1
+        v_cursor_x = -1
 
         rows, cols = buffer.shape
         t_size = shutil.get_terminal_size()
@@ -1102,74 +1106,73 @@ class Renderer:
         rows = min(rows, max_rows)
         cols = min(cols, max_cols // 2)
 
-        # Detection for full-screen shifts (e.g. walking)
-        # If too many tiles changed, a full redraw is often cleaner for the terminal
-        changed_mask = (buffer[:rows, :cols] != self.previous_frame[:rows, :cols]) | \
-                       (self.fg_color_buffer[:rows, :cols] != self.previous_fg_buffer[:rows, :cols]).any(axis=2) | \
-                       (self.bg_color_buffer[:rows, :cols] != self.previous_bg_buffer[:rows, :cols]).any(axis=2)
-        
-        change_count = np.count_nonzero(changed_mask)
-        total_cells = rows * cols
-        
-        # If more than 60% of the screen changed, force a full resync
-        force_sync = change_count > (total_cells * 0.6)
-
         for y in range(rows):
-            x = 0
-            while x < cols:
-                # Find next changed cell or contiguous changed block
-                if not force_sync and not changed_mask[y, x]:
-                    x += 1
-                    continue
-                
-                # Move cursor to the start of the changed block
-                screen_col = x * 2 + 1
-                output_parts.append(f"\033[{y+1};{screen_col}H")
-                
-                # Draw contiguous block of cells
-                while x < cols and (force_sync or changed_mask[y, x]):
-                    char = buffer[y, x]
-                    fg = tuple(self.fg_color_buffer[y, x])
-                    bg = tuple(self.bg_color_buffer[y, x])
+            for x in range(cols):
+                char = buffer[y, x]
+                fg = tuple(self.fg_color_buffer[y, x])
+                bg = tuple(self.bg_color_buffer[y, x])
 
-                    # Update colors
+                # Use .get() or slice safely to compare with previous frame
+                prev_char = self.previous_frame[y, x]
+                prev_fg = tuple(self.previous_fg_buffer[y, x])
+                prev_bg = tuple(self.previous_bg_buffer[y, x])
+
+                # Check if tile changed
+                if char != prev_char or fg != prev_fg or bg != prev_bg:
+                    # Target screen column (1-based)
+                    screen_col = x * 2 + 1
+
+                    # Skip if would exceed terminal width
+                    if screen_col + 1 > max_cols:
+                        continue
+
+                    # Move cursor if not at the current tile
+                    if y != v_cursor_y or x != v_cursor_x:
+                        render_commands.append(f"\033[{y+1};{screen_col}H")
+
+                    # Update colors if changed
                     if fg != last_fg:
                         if fg[0] == -1:
-                            output_parts.append("\033[39m")
+                            render_commands.append("\033[39m")
                         else:
-                            output_parts.append(f"\033[38;2;{fg[0]};{fg[1]};{fg[2]}m")
+                            render_commands.append(f"\033[38;2;{fg[0]};{fg[1]};{fg[2]}m")
                         last_fg = fg
 
                     if bg != last_bg:
                         if bg[0] == -1:
-                            output_parts.append("\033[49m")
+                            render_commands.append("\033[49m")
                         else:
-                            output_parts.append(f"\033[48;2;{bg[0]};{bg[1]};{bg[2]}m")
+                            render_commands.append(f"\033[48;2;{bg[0]};{bg[1]};{bg[2]}m")
                         last_bg = bg
 
                     # Render and enforce 2-column width
                     if len(char) == 1:
                         if ord(char) > 126:
                             # Emoji/Wide char - most terms handle as width 2
-                            output_parts.append(char)
+                            render_commands.append(char)
+                            # Emojis often cause drift; force a cursor move for the next cell
+                            v_cursor_x = -1 
                         else:
                             # ASCII - pad to width 2
-                            output_parts.append(char + " ")
+                            render_commands.append(char + " ")
+                            v_cursor_x = x + 1
                     elif len(char) == 2:
-                        output_parts.append(char)
+                        render_commands.append(char)
+                        v_cursor_x = x + 1
                     else:
-                        output_parts.append(char[:2])
-                    
-                    x += 1
+                        render_commands.append(char[:2])
+                        v_cursor_x = -1
 
-        # Save state for next frame
+                    v_cursor_y = y
+
+        # Save state
         self.previous_frame[:rows, :cols] = buffer[:rows, :cols]
         self.previous_fg_buffer[:rows, :cols] = self.fg_color_buffer[:rows, :cols]
         self.previous_bg_buffer[:rows, :cols] = self.bg_color_buffer[:rows, :cols]
 
         # Reset colors and flush
-        output_parts.append("\033[0m")
-        sys.stdout.write("".join(output_parts))
+        render_commands.append("\033[0m")
+        sys.stdout.write("".join(render_commands))
         sys.stdout.flush()
 
     def render_simple_map(self, game_map: "GameMap"):

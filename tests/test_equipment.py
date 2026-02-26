@@ -2,7 +2,6 @@
 Tests for Equipment system and combat stats application.
 """
 
-import pytest
 from entities.components import (
     Equipment,
     WeaponStats,
@@ -11,8 +10,6 @@ from entities.components import (
     Health,
     Position,
     Combat,
-    Render,
-    Item,
 )
 from entities.entities import EntityFactory
 
@@ -29,7 +26,6 @@ class TestEquipmentStats:
         sword_id = factory.create_item(0, 0, "sword")
         weapon_stats = game_engine.entity_manager.get_component(sword_id, WeaponStats)
         if weapon_stats:
-            original_attack = weapon_stats.attack_power
             weapon_stats.attack_power = 50  # Buff significantly
 
             # Equip the weapon

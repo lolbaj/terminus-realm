@@ -32,6 +32,7 @@ class BossEncounter:
         self.defense = defense
         self.special_abilities = special_abilities or []
         self.defeated = False
+        self.is_spawned = False
 
 
 class BossSystem:
@@ -126,7 +127,7 @@ class BossSystem:
     ) -> Optional[BossEncounter]:
         """Check if the player is near a boss encounter."""
         for (bx, by), boss in self.boss_encounters.items():
-            if not boss.defeated:
+            if not boss.defeated and not boss.is_spawned:
                 distance = ((player_x - bx) ** 2 + (player_y - by) ** 2) ** 0.5
                 if distance <= radius:
                     return boss
@@ -164,6 +165,7 @@ class BossSystem:
         )
 
         # Mark the boss as spawned
+        boss_encounter.is_spawned = True
         boss_encounter.defeated = False
 
         return eid

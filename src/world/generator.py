@@ -100,23 +100,37 @@ def generate_perlin_noise(
 
         for _ in range(octaves):
             # Generate random grid
-            # Ensure scale >= 1
-            s_float = max(1.0, current_scale)
+            s_float = max(2.0, current_scale)
             s_int = int(s_float)
-            if s_int < 1:
-                s_int = 1
 
-            # Calculate grid size ensuring it covers the dimensions when repeated by s_int
-            grid_h = (height + s_int - 1) // s_int
-            grid_w = (width + s_int - 1) // s_int
+            grid_h = max(2, height // s_int + 1)
+            grid_w = max(2, width // s_int + 1)
 
             low_res = np.random.random((grid_h, grid_w))
 
-            # Upscale using Kronecker product (nearest neighbor)
-            upscaled = low_res.repeat(s_int, axis=0).repeat(s_int, axis=1)
+            # Upscale using bilinear interpolation (manual numpy implementation)
+            y_indices = np.linspace(0, grid_h - 1, height)
+            x_indices = np.linspace(0, grid_w - 1, width)
 
-            # Crop to exact size
-            layer = upscaled[:height, :width]
+            y_low = y_indices.astype(int)
+            y_high = np.minimum(y_low + 1, grid_h - 1)
+            y_weight = y_indices - y_low
+
+            x_low = x_indices.astype(int)
+            x_high = np.minimum(x_low + 1, grid_w - 1)
+            x_weight = x_indices - x_low
+
+            # Interpolate rows
+            row_low = low_res[y_low, :]
+            row_high = low_res[y_high, :]
+            interpolated_rows = (
+                row_low * (1 - y_weight[:, None]) + row_high * y_weight[:, None]
+            )
+
+            # Interpolate columns
+            col_low = interpolated_rows[:, x_low]
+            col_high = interpolated_rows[:, x_high]
+            layer = col_low * (1 - x_weight) + col_high * x_weight
 
             # Accumulate
             world += layer * amp

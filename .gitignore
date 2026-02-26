@@ -81,6 +81,11 @@ target/
 profile_default/
 ipython_config.py
 
+#agentic AI documentation
+GEMINI.md 
+AGENT.md
+QWEN.md
+
 # pyenv
 #   For a library or binary, you wish to ignore these files over to the user.
 # .python-version

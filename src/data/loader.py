@@ -17,55 +17,52 @@ class DataLoader:
 
     def load_json(self, filename: str) -> Dict[str, Any]:
         """Load data from a JSON file."""
+        if f"json_{filename}" in self._cache:
+            return self._cache[f"json_{filename}"]
+
         filepath = self.data_dir / f"{filename}.json"
-
-        if str(filepath) in self._cache:
-            return self._cache[str(filepath)]
-
         if not filepath.exists():
             raise FileNotFoundError(f"Data file not found: {filepath}")
 
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        self._cache[str(filepath)] = data
+        self._cache[f"json_{filename}"] = data
         return data
 
     def load_toml(self, filename: str) -> Dict[str, Any]:
         """Load data from a TOML file."""
+        if f"toml_{filename}" in self._cache:
+            return self._cache[f"toml_{filename}"]
+
         filepath = self.data_dir / f"{filename}.toml"
-
-        if str(filepath) in self._cache:
-            return self._cache[str(filepath)]
-
         if not filepath.exists():
             raise FileNotFoundError(f"Data file not found: {filepath}")
 
         with open(filepath, "r", encoding="utf-8") as f:
             data = toml.load(f)
 
-        self._cache[str(filepath)] = data
+        self._cache[f"toml_{filename}"] = data
         return data
 
     def load_yaml(self, filename: str) -> Dict[str, Any]:
         """Load data from a YAML file."""
+        if f"yaml_{filename}" in self._cache:
+            return self._cache[f"yaml_{filename}"]
+
         try:
             import yaml
         except ImportError:
             raise ImportError("PyYAML is required to load YAML files")
 
         filepath = self.data_dir / f"{filename}.yaml"
-
-        if str(filepath) in self._cache:
-            return self._cache[str(filepath)]
-
         if not filepath.exists():
             raise FileNotFoundError(f"Data file not found: {filepath}")
 
         with open(filepath, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
-        self._cache[str(filepath)] = data
+        self._cache[f"yaml_{filename}"] = data
         return data
 
     def get_item_data(self, item_id: str) -> Optional[Dict[str, Any]]:

@@ -1,13 +1,16 @@
 """
 Field of View (FOV) calculation module.
-Implements Recursive Shadowcasting for efficient visibility.
+Implements a robust Recursive Shadowcasting algorithm.
 """
 
 import numpy as np
-from world.map import GameMap
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from world.map import GameMap
 
 
-def calculate_fov(game_map: GameMap, x: int, y: int, radius: int) -> np.ndarray:
+def calculate_fov(game_map: "GameMap", x: int, y: int, radius: int) -> np.ndarray:
     """
     Calculate the field of view from a given position.
 
@@ -22,191 +25,94 @@ def calculate_fov(game_map: GameMap, x: int, y: int, radius: int) -> np.ndarray:
     """
     width, height = game_map.width, game_map.height
     visible = np.zeros((height, width), dtype=bool)
-    visible[y, x] = True
 
-    def get_light(r, c):
-        if 0 <= r < height and 0 <= c < width:
-            # We assume walls block light.
-            # game_map.is_transparent(c, r) would be ideal,
-            # but checking is_walkable is a close proxy if walls are the only blocker.
-            # Better: check the tile type directly if available, or use a method on game_map.
-            # Using game_map.tiles directly: TILE_WALL blocks light.
-            # We need to import TILE_WALL to be safe, or just rely on game_map methods.
-            return game_map.is_transparent(c, r)
-        return False
+    # Observer is always visible
+    if 0 <= x < width and 0 <= y < height:
+        visible[y, x] = True
+    else:
+        return visible
 
-    def cast_light(cx, cy, row, start, end, radius, xx, xy, yx, yy, id):
-        if start < end:
-            return
-
-        radius_sq = radius * radius
-
-        for j in range(row, radius + 1):
-            dx, dy = -j - 1, -j
-            blocked = False
-
-            while dx <= 0:
-                dx += 1
-                # Translate relative coordinates to map coordinates
-                X, Y = cx + dx * xx + dy * xy, cy + dx * yx + dy * yy
-
-                # Slope of the left and right edges of the current tile
-                l_slope, r_slope = (dx - 0.5) / (dy + 0.5), (dx + 0.5) / (dy - 0.5)
-
-                if start < r_slope:
-                    continue
-                elif end > l_slope:
-                    break
-                else:
-                    # Check bounds
-                    if 0 <= X < width and 0 <= Y < height:
-                        # Check radius
-                        if dx * dx + dy * dy < radius_sq:
-                            visible[Y, X] = True
-
-                    if blocked:
-                        if not get_light(Y, X):
-                            new_start = r_slope
-                            if id < 4:  # Optimization/Logic check
-                                cast_light(
-                                    cx,
-                                    cy,
-                                    j + 1,
-                                    start,
-                                    l_slope,
-                                    radius,
-                                    xx,
-                                    xy,
-                                    yx,
-                                    yy,
-                                    id + 1,
-                                )
-                            else:
-                                cast_light(
-                                    cx,
-                                    cy,
-                                    j + 1,
-                                    start,
-                                    l_slope,
-                                    radius,
-                                    xx,
-                                    xy,
-                                    yx,
-                                    yy,
-                                    id + 1,
-                                )
-                            start = new_start
-                            if (
-                                start < end
-                            ):  # Should not happen given loop condition but good for safety
-                                return
-                        else:
-                            blocked = False
-                            start = r_slope  # Tweak?
-                    else:
-                        if not get_light(Y, X) and j < radius:
-                            blocked = True
-                            cast_light(
-                                cx,
-                                cy,
-                                j + 1,
-                                start,
-                                l_slope,
-                                radius,
-                                xx,
-                                xy,
-                                yx,
-                                yy,
-                                id + 1,
-                            )
-                            new_start = r_slope
-                            start = new_start
-
-            if blocked:
-                break
-
-    # Simple Symmetric Shadowcasting (Python implementation of a common algorithm)
-    # Source adapted from various roguebasin/libtcod Python examples
-
-    # 0: Octant 1
-    # ...
-    # This specific implementation is a bit complex to write from scratch without errors.
-    # Let's use a simpler, cleaner recursive shadowcaster.
-
-    _cast_light_recursive(game_map, x, y, radius, 1, 1.0, 0.0, 0, -1, 0, 1, visible)
-    _cast_light_recursive(game_map, x, y, radius, 1, 1.0, 0.0, 0, 1, 0, 1, visible)
-    _cast_light_recursive(game_map, x, y, radius, 1, 1.0, 0.0, -1, 0, 1, 0, visible)
-    _cast_light_recursive(game_map, x, y, radius, 1, 1.0, 0.0, 1, 0, 1, 0, visible)
-
-    _cast_light_recursive(game_map, x, y, radius, 1, 1.0, 0.0, 0, -1, 0, -1, visible)
-    _cast_light_recursive(game_map, x, y, radius, 1, 1.0, 0.0, 0, 1, 0, -1, visible)
-    _cast_light_recursive(game_map, x, y, radius, 1, 1.0, 0.0, -1, 0, -1, 0, visible)
-    _cast_light_recursive(game_map, x, y, radius, 1, 1.0, 0.0, 1, 0, -1, 0, visible)
+    # Scan each of the 8 octants
+    for octant in range(8):
+        _refresh_octant(game_map, visible, x, y, radius, octant)
 
     return visible
 
 
-def _cast_light_recursive(
-    game_map, cx, cy, radius, row, start_slope, end_slope, xx, xy, yx, yy, visible
-):
-    if start_slope < end_slope:
-        return
+def _refresh_octant(game_map, visible, x, y, radius, octant):
+    """Scan a single octant using recursive shadowcasting."""
+    # (row, start_slope, end_slope)
+    stack = [(1, 1.0, 0.0)]
 
-    radius_sq = radius * radius
+    width, height = game_map.width, game_map.height
 
-    for j in range(row, radius + 1):
-        dx = -j - 1
-        dy = -j
-        blocked = False
+    while stack:
+        row, start_slope, end_slope = stack.pop()
 
-        while dx <= 0:
-            dx += 1
-            # Translate relative to map
-            X, Y = cx + dx * xx + dy * xy, cy + dx * yx + dy * yy
+        if row > radius:
+            continue
 
-            l_slope = (dx - 0.5) / (dy + 0.5)
-            r_slope = (dx + 0.5) / (dy - 0.5)
+        prev_tile_blocked = False
+
+        # Iterate through columns in this row
+        for col in range(row + 1):
+            # Transform relative octant coordinates to map coordinates
+            # Each octant has a different mapping of (row, col) to (dx, dy)
+            dx, dy = _transform_octant(row, col, octant)
+            mx, my = x + dx, y + dy
+
+            if not (0 <= mx < width and 0 <= my < height):
+                continue
+
+            # Slopes for the current tile
+            # Use symmetric slopes for better results
+            l_slope = (col + 0.5) / (row - 0.5)
+            r_slope = (col - 0.5) / (row + 0.5)
 
             if start_slope < r_slope:
                 continue
-            elif end_slope > l_slope:
-                break
+            if end_slope > l_slope:
+                break  # Moved past the visible cone
+
+            # Check distance
+            if (dx * dx + dy * dy) <= (radius * radius):
+                visible[my, mx] = True
+
+            # Transparency check
+            tile_blocked = not game_map.is_transparent(mx, my)
+
+            if prev_tile_blocked:
+                if not tile_blocked:
+                    # Transition from blocked to free: start a new segment
+                    start_slope = l_slope
             else:
-                # Check bounds
-                if 0 <= X < game_map.width and 0 <= Y < game_map.height:
-                    if dx * dx + dy * dy < radius_sq:
-                        visible[Y, X] = True
+                if tile_blocked and row < radius:
+                    # Transition from free to blocked: push the completed segment
+                    stack.append((row + 1, start_slope, r_slope))
 
-                # Check blocking
-                # We need a safe way to check transparency
-                is_transparent = False
-                if 0 <= X < game_map.width and 0 <= Y < game_map.height:
-                    is_transparent = game_map.is_transparent(X, Y)
+            prev_tile_blocked = tile_blocked
 
-                if blocked:
-                    if is_transparent:
-                        blocked = False
-                        start_slope = r_slope
-                    else:
-                        pass
-                else:
-                    if not is_transparent and j < radius:
-                        blocked = True
-                        _cast_light_recursive(
-                            game_map,
-                            cx,
-                            cy,
-                            radius,
-                            j + 1,
-                            start_slope,
-                            l_slope,
-                            xx,
-                            xy,
-                            yx,
-                            yy,
-                            visible,
-                        )
-                        start_slope = r_slope
+        # If the last tile was free, the segment continues into the next row
+        if not prev_tile_blocked and row < radius:
+            stack.append((row + 1, start_slope, end_slope))
 
-        if blocked:
-            break
+
+def _transform_octant(row, col, octant):
+    """Convert (row, col) in an abstract octant to (dx, dy) relative to origin."""
+    if octant == 0:
+        return (row, col)
+    if octant == 1:
+        return (col, row)
+    if octant == 2:
+        return (-col, row)
+    if octant == 3:
+        return (-row, col)
+    if octant == 4:
+        return (-row, -col)
+    if octant == 5:
+        return (-col, -row)
+    if octant == 6:
+        return (col, -row)
+    if octant == 7:
+        return (row, -col)
+    return (0, 0)

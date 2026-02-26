@@ -19,6 +19,39 @@ TILE_ASH = 12
 TILE_CACTUS = 13
 TILE_ICE = 14
 
+# Centralized character mapping for loading maps from text
+CHAR_MAP = {
+    ".": TILE_FLOOR,
+    " ": TILE_FLOOR,
+    "#": TILE_WALL,
+    "+": TILE_DOOR,
+    "~": TILE_WATER,
+    ",": TILE_GRASS,
+    "T": TILE_TREE,
+    ">": TILE_STAIRS_DOWN,
+    "<": TILE_STAIRS_UP,
+    "S": TILE_SAND,
+    "P": TILE_PAVEMENT,
+    "*": TILE_SNOW,
+    "=": TILE_LAVA,
+    "A": TILE_ASH,
+    "C": TILE_CACTUS,
+    "I": TILE_ICE,
+    # Box drawing walls
+    "║": TILE_WALL,
+    "═": TILE_WALL,
+    "╚": TILE_WALL,
+    "╔": TILE_WALL,
+    "╗": TILE_WALL,
+    "╝": TILE_WALL,
+    "╠": TILE_WALL,
+    "╦": TILE_WALL,
+    "╣": TILE_WALL,
+    "╩": TILE_WALL,
+    "╬": TILE_WALL,
+    "█": TILE_WALL,
+}
+
 
 class Tile:
     """Represents a single tile in the game world."""
@@ -45,14 +78,34 @@ class Tile:
 class GameMap:
     """Represents the game map."""
 
-    def __init__(self, width: int, height: int):
+    def __init__(
+        self,
+        width: int,
+        height: int,
+        tiles: Optional[np.ndarray] = None,
+        explored: Optional[np.ndarray] = None,
+        visible: Optional[np.ndarray] = None,
+        is_dark: bool = False,
+    ):
         self.width = width
         self.height = height
+        self.is_dark = is_dark
         # Use numpy array for efficient storage and operations
-        self.tiles = np.full((height, width), TILE_WALL, dtype=np.uint8)
+        if tiles is not None:
+            self.tiles = tiles
+        else:
+            self.tiles = np.full((height, width), TILE_WALL, dtype=np.uint8)
+
         # Visibility arrays - Default to fully visible (No Fog of War)
-        self.explored = np.full((height, width), True, dtype=bool)
-        self.visible = np.full((height, width), True, dtype=bool)
+        if explored is not None:
+            self.explored = explored
+        else:
+            self.explored = np.full((height, width), True, dtype=bool)
+
+        if visible is not None:
+            self.visible = visible
+        else:
+            self.visible = np.full((height, width), True, dtype=bool)
 
         # Start position (x, y) if defined in map data
         self.start_position: Optional[Tuple[int, int]] = None
@@ -61,9 +114,15 @@ class GameMap:
         self.tile_definitions = {}
         tiles_data = DATA_LOADER.load_json("tiles")
 
+        # Get max tile id for lookup arrays
+        max_id = max(int(k) for k in tiles_data.keys()) if tiles_data else 0
+        self.tile_char_lookup = np.full(max_id + 1, "  ", dtype=object)
+        self.tile_fg_color_lookup = np.full((max_id + 1, 3), 255, dtype=np.int16)
+        self.tile_bg_color_lookup = np.full((max_id + 1, 3), -1, dtype=np.int16)
+
         for key, data in tiles_data.items():
             tile_id = int(key)
-            self.tile_definitions[tile_id] = Tile(
+            tile_def = Tile(
                 tile_type=tile_id,
                 walkable=data.get("walkable", False),
                 transparent=data.get("transparent", False),
@@ -71,6 +130,13 @@ class GameMap:
                 fg_color=tuple(data.get("fg", [255, 255, 255])),
                 bg_color=tuple(data.get("bg", [0, 0, 0])) if data.get("bg") else None,
             )
+            self.tile_definitions[tile_id] = tile_def
+
+            # Fill lookups
+            self.tile_char_lookup[tile_id] = tile_def.char
+            self.tile_fg_color_lookup[tile_id] = tile_def.fg_color
+            if tile_def.bg_color:
+                self.tile_bg_color_lookup[tile_id] = tile_def.bg_color
 
     def create_room(self, x1: int, y1: int, x2: int, y2: int):
         """Create a rectangular room in the map."""
@@ -112,24 +178,14 @@ class GameMap:
         if 0 <= x < self.width and 0 <= y < self.height:
             tile_type = self.tiles[y, x]
             tile_def = self.tile_definitions[tile_type]
-
-            # Procedural texture for grass
-            if tile_type == TILE_GRASS:
-                # Cleaner look for Rucoy style - mostly solid, occasional detail
-                if (x * 7 + y * 13) % 11 == 0:
-                    char = ".."  # faint detail
-                else:
-                    char = tile_def.char
-            else:
-                char = tile_def.char
+            char = tile_def.char
 
             # If the tile is not visible but has been explored, show it differently
             if not visible and self.explored[y, x]:
-                # ... rest of the logic
                 if char == ". " or char == "· ":
                     return ": "
-                elif char == "🪨":
-                    return "▒▒"
+                elif char == "  ":
+                    return "░░"
                 else:
                     return char
             else:
@@ -154,14 +210,18 @@ class GameMap:
 
     def update_fov(self, fov_array: np.ndarray):
         """Update the visibility and exploration status based on FOV."""
-        # FOV disabled: Keep everything visible
-        pass
+        # Update current visibility
+        self.visible[:] = fov_array
+        # Add visible tiles to explored
+        self.explored |= fov_array
 
     def generate_dungeon_rooms(
         self, max_rooms: int = 10, min_size: int = 4, max_size: int = 8
     ):
         """Generate a simple dungeon with rooms connected by tunnels."""
+        self.is_dark = True
         rooms = []
+        first_room_center_x, first_room_center_y = self.width // 2, self.height // 2
 
         for r in range(max_rooms):
             # Random width and height
@@ -214,38 +274,6 @@ class GameMap:
 
     def load_from_string(self, map_data: list[str]):
         """Load map data from a list of strings."""
-        # Legend mapping
-        char_map = {
-            ".": TILE_FLOOR,
-            "#": TILE_WALL,
-            "+": TILE_DOOR,
-            "~": TILE_WATER,
-            ",": TILE_GRASS,
-            "T": TILE_TREE,
-            ">": TILE_STAIRS_DOWN,
-            "<": TILE_STAIRS_UP,
-            "S": TILE_SAND,
-            "P": TILE_PAVEMENT,
-            "*": TILE_SNOW,
-            "=": TILE_LAVA,
-            "A": TILE_ASH,
-            "C": TILE_CACTUS,
-            "I": TILE_ICE,
-            # Box drawing walls
-            "║": TILE_WALL,
-            "═": TILE_WALL,
-            "╚": TILE_WALL,
-            "╔": TILE_WALL,
-            "╗": TILE_WALL,
-            "╝": TILE_WALL,
-            "╠": TILE_WALL,
-            "╦": TILE_WALL,
-            "╣": TILE_WALL,
-            "╩": TILE_WALL,
-            "╬": TILE_WALL,
-            "█": TILE_WALL,
-        }
-
         for y, row in enumerate(map_data):
             if y >= self.height:
                 break
@@ -259,7 +287,7 @@ class GameMap:
                     continue
 
                 # Default to floor for spaces or unknown chars
-                tile_type = char_map.get(char, TILE_FLOOR)
+                tile_type = CHAR_MAP.get(char, TILE_FLOOR)
                 self.tiles[y, x] = tile_type
 
 
