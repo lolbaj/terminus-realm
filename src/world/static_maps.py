@@ -26,13 +26,17 @@ def load_static_chunks() -> Dict[Tuple[int, int], List[str]]:
             x = map_entry.get("x")
             y = map_entry.get("y")
             layout = map_entry.get("layout")
+            fg_layout = map_entry.get("fg_layout")
 
             if x is not None and y is not None and layout:
                 # Handle multi-line string format
                 if isinstance(layout, str):
                     layout = layout.strip().split("\n")
+                
+                if isinstance(fg_layout, str):
+                    fg_layout = fg_layout.strip().split("\n")
 
-                static_chunks[(x, y)] = layout
+                static_chunks[(x, y)] = (layout, fg_layout)
 
         print(f"Loaded {len(static_chunks)} static map chunks from config.")
         return static_chunks

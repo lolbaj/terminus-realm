@@ -332,7 +332,10 @@ def generate_biome_chunk(
     # Check for static manually designed chunk
     if (chunk_x, chunk_y) in STATIC_CHUNKS:
         game_map = GameMap(chunk_size, chunk_size)
-        layout = STATIC_CHUNKS[(chunk_x, chunk_y)]
+        map_data = STATIC_CHUNKS[(chunk_x, chunk_y)]
+        
+        # Handle tuple (layout, fg_layout) or just layout
+        layout = map_data[0] if isinstance(map_data, tuple) else map_data
 
         for y, row in enumerate(layout):
             if y >= chunk_size:

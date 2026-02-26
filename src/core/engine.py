@@ -246,6 +246,9 @@ class GameEngine:
 
         print(f"Player created at ({start_x}, {start_y})")
 
+        # Spawn pre-placed entities (Monsters/Items from Static Maps)
+        self.spawn_preplaced_entities()
+
         # Spawn static shopkeeper nearby
         self.entity_wrapper.factory.create_shopkeeper(
             start_x + 5,
@@ -266,6 +269,27 @@ class GameEngine:
 
         # Initial FOV update
         self.update_fov()
+
+    def spawn_preplaced_entities(self):
+        """Spawn entities that were hand-placed in static map chunks."""
+        from world.persistent_world import get_persistent_world
+        world = get_persistent_world()
+        
+        count = 0
+        for entry in world.preplaced_entities:
+            e_type = entry["type"]
+            e_subtype = entry["subtype"]
+            ex, ey = entry["x"], entry["y"]
+            
+            if e_type == "monster":
+                self.entity_wrapper.factory.create_monster(ex, ey, e_subtype)
+                count += 1
+            elif e_type == "item":
+                self.entity_wrapper.factory.create_item(ex, ey, e_subtype)
+                count += 1
+                
+        if count > 0:
+            print(f"Spawned {count} pre-placed entities from static maps.")
 
     def update_active_region(self):
         """
@@ -372,10 +396,14 @@ class GameEngine:
             target_temp = 25.0 # Comfortable baseline
             
             # Biome baselines
-            if biome == "volcanic": target_temp = 60.0
-            elif biome == "desert": target_temp = 45.0
-            elif biome == "snow": target_temp = -10.0
-            elif biome == "ocean": target_temp = 15.0
+            if biome == "volcanic":
+                target_temp = 60.0
+            elif biome == "desert":
+                target_temp = 45.0
+            elif biome == "snow":
+                target_temp = -10.0
+            elif biome == "ocean":
+                target_temp = 15.0
             
             # Tile overrides (Direct contact)
             if tile == TILE_LAVA:
@@ -390,13 +418,16 @@ class GameEngine:
             else:
                 temp.lava_contact_time = max(0, temp.lava_contact_time - dt * 2)
                 
-            if tile == TILE_WATER: target_temp -= 15.0
-            if tile == TILE_ICE: target_temp = -30.0
+            if tile == TILE_WATER:
+                target_temp -= 15.0
+            if tile == TILE_ICE:
+                target_temp = -30.0
             
             # 2. Equalize Temperature (Slowly move current towards target)
             # Normalization rate: 5 degrees per second base
             rate = 5.0
-            if tile == TILE_LAVA: rate = 100.0 # Heating up VERY fast
+            if tile == TILE_LAVA:
+                rate = 100.0 # Heating up VERY fast
             
             diff = target_temp - temp.current
             temp.current += diff * min(1.0, dt * (rate / 100.0))
@@ -405,7 +436,8 @@ class GameEngine:
             # Heatstroke / Burning
             if temp.current > 50.0:
                 heat_damage = (temp.current - 50.0) * 0.1 * dt
-                if tile == TILE_LAVA: heat_damage *= 5.0 # Extra damage for direct lava
+                if tile == TILE_LAVA:
+                    heat_damage *= 5.0 # Extra damage for direct lava
                 
                 health.current -= heat_damage
                 if random.random() < 0.05: # Occasional message
@@ -1461,7 +1493,6 @@ class GameEngine:
     def respawn_player(self):
         """Handle player death: lose XP and respawn at a safe location."""
         from entities.components import Position, Health, Mana, Level
-        import random
 
         if self.player_id is None:
             return
@@ -1500,8 +1531,10 @@ class GameEngine:
                         pos.x, pos.y = tx, ty
                         found = True
                         break
-                if found: break
-            if found: break
+                if found:
+                    break
+            if found:
+                break
 
         # 3. Restore Vitals
         health.current = health.maximum

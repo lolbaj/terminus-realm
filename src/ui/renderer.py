@@ -361,12 +361,6 @@ class Renderer:
             y_start = cam_y
             x_start = cam_x
             
-            # Get a slightly larger slice of the actual map to check neighbors
-            y_p = max(0, y_start - 1)
-            y_p2 = min(game_map.height, y_end + 1)
-            x_p = max(0, x_start - 1)
-            x_p2 = min(game_map.width, x_end + 1)
-            
             # Create a shore mask for the visible slice
             # A tile is "shallow" if it's water but adjacent to land
             full_is_land = game_map.tiles != TILE_WATER
@@ -923,7 +917,8 @@ class Renderer:
 
         if equip:
             def get_item_name(eid):
-                if eid is None: return "None"
+                if eid is None:
+                    return "None"
                 it = entity_manager.get_component(eid, Item)
                 return it.name if it else "Unknown"
 

@@ -390,7 +390,10 @@ class MapEditor:
             sx + 22, sy + 7, "V: Paste/Cycle Vis", (200, 200, 200), (20, 20, 40)
         )
         self.renderer.draw_text(
-            sx + 22, sy + 8, "1-0: Select Tile", (200, 200, 200), (20, 20, 40)
+            sx + 22, sy + 8, "G: Cycle Layers (BG/FG)", (255, 255, 0), (20, 20, 40)
+        )
+        self.renderer.draw_text(
+            sx + 22, sy + 9, "1-0: Select Tile", (200, 200, 200), (20, 20, 40)
         )
 
         # Column 3
