@@ -164,7 +164,12 @@ class Equipment(Component):
 
     weapon: Optional[int] = None
     weapon_type: str = "melee"  # melee, distance, magic
-    armor: Optional[int] = None
+    
+    # Armor Slots
+    head: Optional[int] = None
+    body: Optional[int] = None
+    legs: Optional[int] = None
+    shield: Optional[int] = None
 
 
 @dataclass(slots=True)
@@ -217,3 +222,14 @@ class VFX(Component):
     x_offset: float = 0.0
     y_offset: float = 0.0
     target_eid: Optional[int] = None
+
+
+@dataclass(slots=True)
+class Temperature(Component):
+    """Component for tracking body temperature and environmental heat."""
+
+    current: float = 37.0  # Normal body temp in Celsius
+    target: float = 37.0  # Temperature body is equalizing towards
+    heat_resistance: float = 0.0  # Reduces damage from heat
+    cold_resistance: float = 0.0  # Reduces damage from cold
+    lava_contact_time: float = 0.0  # Time spent in direct lava contact

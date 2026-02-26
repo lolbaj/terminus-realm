@@ -922,25 +922,27 @@ class Renderer:
         equip_y = start_y + 2
 
         if equip:
-            weapon_name = "None"
-            if equip.weapon:
-                w_item = entity_manager.get_component(equip.weapon, Item)
-                if w_item:
-                    weapon_name = w_item.name
+            def get_item_name(eid):
+                if eid is None: return "None"
+                it = entity_manager.get_component(eid, Item)
+                return it.name if it else "Unknown"
 
-            armor_name = "None"
-            if equip.armor:
-                a_item = entity_manager.get_component(equip.armor, Item)
-                if a_item:
-                    armor_name = a_item.name
+            # Draw equipment slots
+            slots = [
+                (f"Wpn: {get_item_name(equip.weapon)} ({equip.weapon_type})"),
+                (f"Head: {get_item_name(equip.head)}"),
+                (f"Body: {get_item_name(equip.body)}"),
+                (f"Legs: {get_item_name(equip.legs)}"),
+                (f"Shield: {get_item_name(equip.shield)}")
+            ]
 
-            equip_text = f"Equipped: {weapon_name} / {armor_name}"
-            for i, char in enumerate(equip_text):
-                if start_x + 2 + i < buffer_w:
-                    buffer[equip_y, start_x + 2 + i] = char
-                    self.fg_color_buffer[equip_y, start_x + 2 + i] = (100, 200, 255)
+            for i, text in enumerate(slots):
+                for j, char in enumerate(text):
+                    if start_x + 2 + j < buffer_w:
+                        buffer[equip_y + i, start_x + 2 + j] = char
+                        self.fg_color_buffer[equip_y + i, start_x + 2 + j] = (100, 200, 255)
 
-            equip_y += 2  # Add spacing
+            equip_y += len(slots) + 1  # Add spacing
 
         # List Items
         inv = entity_manager.get_component(player_id, Inventory)

@@ -18,9 +18,64 @@
   "shield": {
     "name": "Wooden Shield",
     "type": "armor",
+    "slot": "shield",
     "defense_bonus": 3,
     "char": "🛡️",
     "color": [150, 100, 50],
     "description": "A simple wooden shield."
+  },
+  "leather_helmet": {
+    "name": "Leather Helmet",
+    "type": "armor",
+    "slot": "head",
+    "defense_bonus": 2,
+    "char": "🪖",
+    "color": [139, 69, 19],
+    "description": "A simple leather cap."
+  },
+  "iron_helmet": {
+    "name": "Iron Helmet",
+    "type": "armor",
+    "slot": "head",
+    "defense_bonus": 5,
+    "char": "🪖",
+    "color": [192, 192, 192],
+    "description": "A sturdy iron helmet."
+  },
+  "leather_tunic": {
+    "name": "Leather Tunic",
+    "type": "armor",
+    "slot": "body",
+    "defense_bonus": 4,
+    "char": "👕",
+    "color": [160, 82, 45],
+    "description": "A protective leather tunic."
+  },
+  "iron_chainmail": {
+    "name": "Iron Chainmail",
+    "type": "armor",
+    "slot": "body",
+    "defense_bonus": 10,
+    "char": "🧥",
+    "color": [176, 196, 222],
+    "description": "Solid iron chainmail."
+  },
+  "leather_boots": {
+    "name": "Leather Boots",
+    "type": "armor",
+    "slot": "legs",
+    "defense_bonus": 2,
+    "char": "👢",
+    "color": [101, 67, 33],
+    "description": "Sturdy leather boots."
+  },
+  "iron_greaves": {
+    "name": "Iron Greaves",
+    "type": "armor",
+    "slot": "legs",
+    "defense_bonus": 6,
+    "char": "👖",
+    "color": [169, 169, 169],
+    "description": "Heavy iron greaves."
   }
 }

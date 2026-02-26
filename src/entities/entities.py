@@ -20,6 +20,7 @@ from entities.components import (
     ArmorStats,
     Inventory,
     Shop,
+    Temperature,
 )
 
 # Loot Configuration
@@ -139,6 +140,7 @@ class EntityFactory:
         self.entity_manager.add_component(eid, Inventory(capacity=20, items=[]))
         self.entity_manager.add_component(eid, Level())
         self.entity_manager.add_component(eid, Player())
+        self.entity_manager.add_component(eid, Temperature())
 
         return eid
 
@@ -328,8 +330,8 @@ class EntityFactory:
             self.entity_manager.add_component(
                 eid,
                 ArmorStats(
-                    defense=defense_bonus,
-                    slot="hand",  # Default
+                    defense=defense_bonus + data.get("defense_bonus", 0),
+                    slot=data.get("slot", "body"),
                 ),
             )
 

@@ -339,8 +339,88 @@ class GameEngine:
         # Update VFX system
         self.vfx_system.update(dt)
 
+        # Update Temperature System
+        self.update_temperature(dt)
+
         # Handle any game-specific updates
         self.handle_updates(dt)
+
+    def update_temperature(self, dt: float):
+        """Update entity temperatures and apply effects."""
+        from entities.components import Temperature, Position, Health
+        from world.map import TILE_LAVA, TILE_WATER, TILE_ICE
+        from world.persistent_world import get_persistent_world
+        import random
+        
+        world = get_persistent_world()
+        
+        # Get all entities with Temperature
+        entities = self.entity_manager.get_all_entities_with_component(Temperature)
+        
+        for eid in entities:
+            temp = self.entity_manager.get_component(eid, Temperature)
+            pos = self.entity_manager.get_component(eid, Position)
+            health = self.entity_manager.get_component(eid, Health)
+            
+            if not temp or not pos or not health:
+                continue
+                
+            # 1. Determine Target Temperature based on biome and tile
+            biome = world.get_biome(pos.x, pos.y)
+            tile = self.game_map.tiles[pos.y, pos.x]
+            
+            target_temp = 25.0 # Comfortable baseline
+            
+            # Biome baselines
+            if biome == "volcanic": target_temp = 60.0
+            elif biome == "desert": target_temp = 45.0
+            elif biome == "snow": target_temp = -10.0
+            elif biome == "ocean": target_temp = 15.0
+            
+            # Tile overrides (Direct contact)
+            if tile == TILE_LAVA:
+                target_temp = 1000.0 # Incinerating
+                temp.lava_contact_time += dt
+                # Direct death if on lava for 3 seconds
+                if temp.lava_contact_time >= 3.0:
+                    self.log("You have been incinerated by direct lava contact!", (255, 50, 50))
+                    temp.lava_contact_time = 0 # Reset
+                    self.respawn_player()
+                    continue
+            else:
+                temp.lava_contact_time = max(0, temp.lava_contact_time - dt * 2)
+                
+            if tile == TILE_WATER: target_temp -= 15.0
+            if tile == TILE_ICE: target_temp = -30.0
+            
+            # 2. Equalize Temperature (Slowly move current towards target)
+            # Normalization rate: 5 degrees per second base
+            rate = 5.0
+            if tile == TILE_LAVA: rate = 100.0 # Heating up VERY fast
+            
+            diff = target_temp - temp.current
+            temp.current += diff * min(1.0, dt * (rate / 100.0))
+            
+            # 3. Apply Temperature Effects (Damage)
+            # Heatstroke / Burning
+            if temp.current > 50.0:
+                heat_damage = (temp.current - 50.0) * 0.1 * dt
+                if tile == TILE_LAVA: heat_damage *= 5.0 # Extra damage for direct lava
+                
+                health.current -= heat_damage
+                if random.random() < 0.05: # Occasional message
+                    self.log("The heat is unbearable!", (255, 100, 0))
+                    
+            # Hypothermia / Freezing
+            elif temp.current < 5.0:
+                cold_damage = (5.0 - temp.current) * 0.05 * dt
+                health.current -= cold_damage
+                if random.random() < 0.05:
+                    self.log("You are freezing to death!", (150, 200, 255))
+            
+            # Check death from cumulative temp damage
+            if health.current <= 0:
+                self.respawn_player()
 
     def render(self):
         """Render the game."""
@@ -897,24 +977,29 @@ class GameEngine:
             # Equip it
             equip = self.entity_manager.get_component(self.player_id, Equipment)
             if equip:
+                slot = armor_stats.slot
+                
+                # Get the current item in that slot
+                old_item_id = getattr(equip, slot, None)
+                
                 # Unequip old armor if any
-                if equip.armor is not None:
-                    old_armor_name = "Unknown"
-                    old_item = self.entity_manager.get_component(equip.armor, Item)
+                if old_item_id is not None:
+                    old_weapon_name = "Unknown"
+                    old_item = self.entity_manager.get_component(old_item_id, Item)
                     if old_item:
-                        old_armor_name = old_item.name
+                        old_weapon_name = old_item.name
 
-                    player_inv.items.append(equip.armor)
-                    self.log(f"Unequipped {old_armor_name}.", (200, 200, 200))
+                    player_inv.items.append(old_item_id)
+                    self.log(f"Unequipped {old_weapon_name}.", (200, 200, 200))
 
                 # Remove new armor from inventory
                 player_inv.items.pop(self.inventory_selection)
 
-                # Equip new armor
-                equip.armor = item_id
+                # Equip new armor in the specific slot
+                setattr(equip, slot, item_id)
 
                 self.log(
-                    f"Equipped {item_comp.name} (+{armor_stats.defense} Def).",
+                    f"Equipped {item_comp.name} to {slot} (+{armor_stats.defense} Def).",
                     (100, 200, 255),
                 )
 
@@ -968,11 +1053,33 @@ class GameEngine:
             # Check AI type before attacking
             monster_id = monsters[0]
             from entities.components import Monster
+            import random
 
             monster_comp = self.entity_manager.get_component(monster_id, Monster)
 
             if monster_comp and monster_comp.ai_type == "passive":
-                self.log(f"{monster_comp.name} looks at you.", (100, 255, 100))
+                # Give passive NPCs a purpose through interaction
+                if monster_comp.name.lower() == "dog":
+                    self.log("The Dog barks happily and wags its tail.", (200, 150, 100))
+                    self.vfx_system.add_floating_text(new_x, new_y, "Woof!", (255, 255, 255))
+                elif monster_comp.name.lower() == "citizen":
+                    tips = [
+                        "Stay on the paths to avoid danger.",
+                        "I hear the oasis in the desert has strange ruins.",
+                        "Watch out for the lava, it will melt you!",
+                        "Ice is slippery, be careful!",
+                        "Cacti hurt if you bump into them.",
+                        "Shopkeepers pay good gold for loot."
+                    ]
+                    self.log(f"{monster_comp.name} says: '{random.choice(tips)}'", (150, 255, 150))
+                    
+                    # Small chance to drop a random minor item when talked to for the first time?
+                    # Keep it simple: 5% chance to drop a potion
+                    if random.random() < 0.05:
+                        self.log(f"{monster_comp.name} drops something for you!", (255, 215, 0))
+                        self.entity_wrapper.factory.create_item(new_x, new_y, "health_potion")
+                else:
+                    self.log(f"{monster_comp.name} looks at you curiously.", (100, 255, 100))
             else:
                 # Attack the first monster found
                 self.handle_combat(self.player_id, monster_id)
@@ -980,21 +1087,70 @@ class GameEngine:
 
         # Check if the new position is walkable
         if self.game_map.is_walkable(new_x, new_y):
+            # Handle Ice sliding
+            from world.map import TILE_ICE, TILE_LAVA, TILE_CACTUS, TILE_SNOW, TILE_SAND, TILE_ASH
+            import random
+            
+            current_tile = self.game_map.tiles[pos.y, pos.x]
+            target_tile = self.game_map.tiles[new_y, new_x]
+            
+            # Terrain Movement Penalties (Struggling to move)
+            if current_tile in [TILE_SNOW, TILE_SAND, TILE_ASH]:
+                if random.random() < 0.25: # 25% chance to lose footing/struggle
+                    self.log(f"You struggle to move through the deep {self.game_map.tile_definitions[current_tile].name.lower()}...", (150, 150, 150))
+                    return
+
+            # Slippery Ice logic: keep sliding in the same direction until hitting a non-ice tile or wall
+            if target_tile == TILE_ICE:
+                self.log("You slip on the ice!", (150, 200, 255))
+                slide_x, slide_y = new_x, new_y
+                while True:
+                    next_x, next_y = slide_x + dx, slide_y + dy
+                    if self.game_map.is_walkable(next_x, next_y) and self.game_map.tiles[next_y, next_x] == TILE_ICE:
+                        slide_x, slide_y = next_x, next_y
+                    else:
+                        break
+                new_x, new_y = slide_x, slide_y
+                target_tile = self.game_map.tiles[new_y, new_x]
+
             # Update the player's position
             pos.x = new_x
             pos.y = new_y
             self.entity_manager.notify_component_change(self.player_id, Position)
 
+            # Environmental Hazards
+            if target_tile == TILE_LAVA:
+                from entities.components import Health
+                health = self.entity_manager.get_component(self.player_id, Health)
+                if health:
+                    damage = max(5, int(health.maximum * 0.05))
+                    health.current -= damage
+                    self.log("You step in lava! It burns!", (255, 50, 50))
+                    intensity = 2.0 + (damage / health.maximum) * 30.0
+                    self.renderer.trigger_shake(min(15.0, intensity), 0.2)
+                    if health.current <= 0:
+                        self.log("You melted in the lava...", (255, 50, 50))
+                        self.respawn_player()
+                        return
+            elif target_tile == TILE_CACTUS:
+                from entities.components import Health
+                health = self.entity_manager.get_component(self.player_id, Health)
+                if health:
+                    health.current -= 2
+                    self.log("You prick yourself on a cactus.", (200, 255, 100))
+                    self.renderer.trigger_shake(2.0, 0.1)
+                    if health.current <= 0:
+                        self.respawn_player()
+                        return
+
             # Update FOV after movement
             self.update_fov()
 
             # Periodically update active region (e.g., every 10 steps)
-            # Use a simple counter or just check occasionally
-            # For simplicity, we can do a distance check or just call it:
             if (pos.x % 10 == 0) or (pos.y % 10 == 0):
                 self.update_active_region()
 
-    def handle_combat(self, attacker_id: int, defender_id: int):
+    def handle_combat(self, attacker_id: int, defender_id: int, is_extra_attack: bool = False):
         """Handle combat with Rucoy-style skill logic."""
         from entities.components import (
             Combat,
@@ -1006,6 +1162,7 @@ class GameEngine:
             WeaponStats,
             ArmorStats,
             Item,
+            Name,
         )
 
         # Get components
@@ -1068,20 +1225,54 @@ class GameEngine:
 
         # Add Armor Defense
         defender_equip = self.entity_manager.get_component(defender_id, Equipment)
-        if defender_equip and defender_equip.armor:
-            armor_stats = self.entity_manager.get_component(
-                defender_equip.armor, ArmorStats
-            )
-            if armor_stats:
-                defense_power += armor_stats.defense
+        if defender_equip:
+            # Check all armor slots
+            for slot_name in ["head", "body", "legs", "shield"]:
+                item_id = getattr(defender_equip, slot_name, None)
+                if item_id is not None:
+                    armor_stats = self.entity_manager.get_component(item_id, ArmorStats)
+                    if armor_stats:
+                        defense_power += armor_stats.defense
 
         # Calculate Damage
-        # Rucoy logic: damage isn't just subtraction, but let's keep it simple for now
-        # Random variance + skill diff
         import random
 
-        variance = random.randint(-1, 2)
-        damage = max(0, attack_power - (defense_power // 2) + variance)
+        # 1. Dodge Chance (Based on relative defense vs attack)
+        # If defense is much higher than attack, higher chance to dodge
+        dodge_chance = 0.05  # Base 5% dodge
+        if defense_power > attack_power:
+            dodge_chance += min(0.4, (defense_power - attack_power) * 0.02)
+        
+        if random.random() < dodge_chance:
+            damage = 0
+            self.log(f"{self.entity_manager.get_component(defender_id, Name).value if self.entity_manager.has_component(defender_id, Name) else 'Target'} dodged the attack!", (150, 150, 150))
+            is_crit = False
+        else:
+            # 2. Critical Hit Chance
+            crit_chance = 0.05 # Base 5% crit
+            if attack_power > defense_power:
+                crit_chance += min(0.3, (attack_power - defense_power) * 0.01)
+            
+            is_crit = random.random() < crit_chance
+
+            # 3. Damage Calculation (Non-linear scaling)
+            # Base damage is attack power
+            base_dmg = attack_power
+            
+            # Mitigation is a percentage based on defense rather than flat subtraction
+            # e.g., 10 defense = ~9% reduction, 50 defense = ~33% reduction
+            mitigation = defense_power / (defense_power + 100)
+            
+            raw_dmg = base_dmg * (1.0 - mitigation)
+            
+            # Add variance (+/- 15%)
+            variance = random.uniform(0.85, 1.15)
+            final_dmg = raw_dmg * variance
+            
+            if is_crit:
+                final_dmg *= 1.5 # 50% extra damage on crit
+                
+            damage = max(1, int(final_dmg)) # Always do at least 1 damage on a hit
 
         defender_health.current -= damage
 
@@ -1090,8 +1281,15 @@ class GameEngine:
         if def_pos:
             # Floating damage number
             vfx_color = (255, 50, 50) if damage > 0 else (150, 150, 150)
+            if is_crit and damage > 0:
+                vfx_color = (255, 215, 0) # Gold for crit
+                
+            text = str(damage) if damage > 0 else "Miss"
+            if is_crit and damage > 0:
+                text = f"{damage}!"
+                
             self.vfx_system.add_floating_text(
-                def_pos.x, def_pos.y, str(damage) if damage > 0 else "Miss", vfx_color
+                def_pos.x, def_pos.y, text, vfx_color
             )
             # Hit flash
             if damage > 0:
@@ -1099,9 +1297,16 @@ class GameEngine:
                     defender_id, (255, 255, 255), duration=0.1
                 )
 
-                # Screen shake if player was hit
+                # Screen shake if player was hit (Dynamic intensity)
                 if self.entity_manager.has_component(defender_id, Player):
-                    self.renderer.trigger_shake(3)
+                    # Intensity based on % of max HP lost (Min 2.0, Max ~15.0)
+                    # e.g. 10 dmg on 100 max HP = 10% = intensity 5
+                    intensity = 2.0 + (damage / defender_health.maximum) * 30.0
+                    # Cap intensity
+                    intensity = min(15.0, intensity)
+                    # Increase duration for big hits
+                    duration = 0.1 + (damage / defender_health.maximum) * 0.5
+                    self.renderer.trigger_shake(intensity, duration=min(0.6, duration))
 
         # Apply Vampiric Effect
         if "Vampiric" in weapon_affixes and damage > 0:
@@ -1176,6 +1381,11 @@ class GameEngine:
 
         # Check for death
         if defender_health.current <= 0:
+            if self.entity_manager.has_component(defender_id, Player):
+                # Player death
+                self.respawn_player()
+                return
+
             self.log(f"{defender_name} is defeated!", (255, 100, 100))
 
             # Handle Base Level XP gain (Mob Kill XP)
@@ -1194,6 +1404,12 @@ class GameEngine:
 
             # Destroy the entity
             self.entity_manager.destroy_entity(defender_id)
+
+        # Extra attack from Swift affix
+        elif "Swift" in weapon_affixes and not is_extra_attack and defender_health.current > 0:
+            if random.random() < 0.3:  # 30% chance
+                self.log("Swift weapon strikes again!", (255, 255, 0))
+                self.handle_combat(attacker_id, defender_id, is_extra_attack=True)
 
     def gain_xp(self, entity_id: int, amount: int):
         """Give XP to an entity and handle leveling up."""
@@ -1241,6 +1457,63 @@ class GameEngine:
 
         if sleep_time > 0:
             time.sleep(sleep_time)
+
+    def respawn_player(self):
+        """Handle player death: lose XP and respawn at a safe location."""
+        from entities.components import Position, Health, Mana, Level
+        import random
+
+        if self.player_id is None:
+            return
+
+        pos = self.entity_manager.get_component(self.player_id, Position)
+        health = self.entity_manager.get_component(self.player_id, Health)
+        mana = self.entity_manager.get_component(self.player_id, Mana)
+        level = self.entity_manager.get_component(self.player_id, Level)
+
+        if not pos or not health or not level:
+            return
+
+        # 1. Experience Loss (10% of XP required for next level)
+        xp_loss = int(level.xp_to_next_level * 0.10)
+        level.current_xp = max(0, level.current_xp - xp_loss)
+        
+        self.log(f"YOU DIED! Lost {xp_loss} XP.", (255, 50, 50))
+
+        # 2. Teleport to Spawn Point (Town Center or persistent_world.player_start_pos)
+        from world.persistent_world import get_persistent_world
+        world = get_persistent_world()
+        
+        spawn_x, spawn_y = self.center_x, self.center_y # Default to world center
+        if world and world.player_start_pos:
+            spawn_x, spawn_y = world.player_start_pos
+        elif hasattr(world, 'center_x'):
+            spawn_x, spawn_y = world.center_x + 25, world.center_y + 25
+
+        # Spiral search for a free spot near spawn
+        found = False
+        for r in range(0, 20):
+            for dx in range(-r, r + 1):
+                for dy in range(-r, r + 1):
+                    tx, ty = spawn_x + dx, spawn_y + dy
+                    if self.game_map.is_walkable(tx, ty):
+                        pos.x, pos.y = tx, ty
+                        found = True
+                        break
+                if found: break
+            if found: break
+
+        # 3. Restore Vitals
+        health.current = health.maximum
+        if mana:
+            mana.current = mana.maximum
+
+        # 4. Notify ECS and Update FOV
+        self.entity_manager.notify_component_change(self.player_id, Position)
+        self.update_fov()
+        self.update_active_region()
+        
+        self.log("You have been resurrected in the town center.", (200, 200, 255))
 
     def quit(self):
         """Quit the game."""
