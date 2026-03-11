@@ -218,24 +218,42 @@ class PersistentWorld:
             ">": TILE_STAIRS_DOWN,
             "<": TILE_STAIRS_UP,
         }
-        
+
         # Entity char mapping
         entity_map = {
-            "g": ("monster", "goblin"), "o": ("monster", "orc"), "k": ("monster", "skeleton"),
-            "r": ("monster", "spider"), "b": ("monster", "bat"), "U": ("monster", "guard"),
-            "m": ("monster", "merchant"), "h": ("monster", "citizen"), "d": ("monster", "dog"),
-            "w": ("monster", "wolf"), "E": ("monster", "bear"), "q": ("monster", "scorpion"),
-            "n": ("monster", "giant_ant"), "j": ("monster", "ice_slime"), "y": ("monster", "yeti"),
-            "p": ("monster", "fire_imp"), "v": ("monster", "lava_golem"),
-            "!": ("item", "health_potion"), "/": ("item", "sword"), "[": ("item", "shield"),
-            "(": ("item", "iron_helmet"), ")": ("item", "leather_helmet"),
-            "{": ("item", "iron_chainmail"), "}": ("item", "leather_tunic"),
-            "_": ("item", "iron_greaves"), "-": ("item", "leather_boots"),
+            "g": ("monster", "goblin"),
+            "o": ("monster", "orc"),
+            "k": ("monster", "skeleton"),
+            "r": ("monster", "spider"),
+            "b": ("monster", "bat"),
+            "U": ("monster", "guard"),
+            "m": ("monster", "merchant"),
+            "h": ("monster", "citizen"),
+            "d": ("monster", "dog"),
+            "w": ("monster", "wolf"),
+            "E": ("monster", "bear"),
+            "q": ("monster", "scorpion"),
+            "n": ("monster", "giant_ant"),
+            "j": ("monster", "ice_slime"),
+            "y": ("monster", "yeti"),
+            "p": ("monster", "fire_imp"),
+            "v": ("monster", "lava_golem"),
+            "!": ("item", "health_potion"),
+            "/": ("item", "sword"),
+            "[": ("item", "shield"),
+            "(": ("item", "iron_helmet"),
+            ")": ("item", "leather_helmet"),
+            "{": ("item", "iron_chainmail"),
+            "}": ("item", "leather_tunic"),
+            "_": ("item", "iron_greaves"),
+            "-": ("item", "leather_boots"),
         }
 
         for (cx, cy), map_data in STATIC_CHUNKS.items():
-            layout, fg_layout = map_data if isinstance(map_data, tuple) else (map_data, None)
-            
+            layout, fg_layout = (
+                map_data if isinstance(map_data, tuple) else (map_data, None)
+            )
+
             start_x = cx * chunk_size + self.center_x
             start_y = cy * chunk_size + self.center_y
 
@@ -264,7 +282,7 @@ class PersistentWorld:
                         # Set tile type
                         tile_type = char_map.get(char, TILE_PAVEMENT)
                         self.world_map[wy, wx] = tile_type
-            
+
             # 2. Process Foreground Entities
             if fg_layout:
                 for r, row in enumerate(fg_layout):
@@ -272,12 +290,9 @@ class PersistentWorld:
                         if char in entity_map:
                             wx, wy = start_x + c, start_y + r
                             e_type, e_subtype = entity_map[char]
-                            self.preplaced_entities.append({
-                                "type": e_type,
-                                "subtype": e_subtype,
-                                "x": wx,
-                                "y": wy
-                            })
+                            self.preplaced_entities.append(
+                                {"type": e_type, "subtype": e_subtype, "x": wx, "y": wy}
+                            )
                 # Save the world to file
         self.save_world()
         print(

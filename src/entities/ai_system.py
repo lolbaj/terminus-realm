@@ -176,15 +176,17 @@ class AISystem:
                 dx = 1
             elif player_pos.x < monster_pos.x:
                 dx = -1
-                
+
             dy = 0
             if player_pos.y > monster_pos.y:
                 dy = 1
             elif player_pos.y < monster_pos.y:
                 dy = -1
-            
+
             new_x, new_y = monster_pos.x + dx, monster_pos.y + dy
-            if game_map.is_walkable(new_x, new_y) and (not spatial_index or not spatial_index.is_occupied(new_x, new_y)):
+            if game_map.is_walkable(new_x, new_y) and (
+                not spatial_index or not spatial_index.is_occupied(new_x, new_y)
+            ):
                 monster_pos.x = new_x
                 monster_pos.y = new_y
                 self.entity_manager.notify_component_change(eid, Position)

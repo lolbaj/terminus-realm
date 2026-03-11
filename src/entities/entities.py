@@ -21,6 +21,8 @@ from entities.components import (
     Inventory,
     Shop,
     Temperature,
+    Banker,
+    BankAccount,
 )
 
 # Loot Configuration
@@ -110,6 +112,33 @@ class EntityFactory:
 
         return eid
 
+    def create_banker(self, x: int, y: int, name: str = "Banker") -> int:
+        """Create a static banker entity."""
+        eid = self.entity_manager.create_entity()
+
+        self.entity_manager.add_component(eid, Position(x=x, y=y))
+        self.entity_manager.add_component(eid, Name(value=name))
+        self.entity_manager.add_component(
+            eid, Render(char="🏦", fg_color=(200, 200, 255))
+        )
+        self.entity_manager.add_component(eid, Health(current=100, maximum=100))
+
+        # Add Banker component
+        self.entity_manager.add_component(eid, Banker(bank_name=f"{name}'s Vault"))
+
+        # Add Monster component with static AI so it can be interacted with
+        self.entity_manager.add_component(
+            eid,
+            Monster(
+                ai_type="static",
+                monster_type="merchant",
+                name=name,
+                xp_reward=0,
+            ),
+        )
+
+        return eid
+
     def create_player(self, x: int, y: int) -> int:
         """Create a player entity."""
         eid = self.entity_manager.create_entity()
@@ -137,15 +166,27 @@ class EntityFactory:
             eid, Equipment(weapon=sword, weapon_type="melee")
         )
 
-        self.entity_manager.add_component(eid, Inventory(capacity=20, items=[]))
+        self.entity_manager.add_component(
+            eid, Inventory(capacity=20, items=[], gold=100)
+        )
+        self.entity_manager.add_component(
+            eid, BankAccount(capacity=50, items=[], gold=0)
+        )
         self.entity_manager.add_component(eid, Level())
         self.entity_manager.add_component(eid, Player())
         self.entity_manager.add_component(eid, Temperature())
 
         return eid
 
-    def create_monster(self, x: int, y: int, monster_type: str = "goblin") -> int:
-        """Create a monster entity."""
+    def create_monster(
+        self,
+        x: int,
+        y: int,
+        monster_type: str = "goblin",
+        is_elite: bool = False,
+        player_level: int = 1,
+    ) -> int:
+        """Create a monster entity with optional elite scaling."""
         eid = self.entity_manager.create_entity()
 
         # Load monster data
@@ -164,22 +205,41 @@ class EntityFactory:
                 "xp_reward": 10,
             }
 
+        # Stat Scaling based on player level (simple linear scaling)
+        level_mult = 1.0 + (player_level - 1) * 0.1
+        
+        hp = int(data.get("health", 10) * level_mult)
+        atk = int(data.get("attack", 0) * level_mult)
+        dfn = int(data.get("defense", 0) * level_mult)
+        xp = int(data.get("xp_reward", 0) * level_mult)
+        
+        name = data.get("name", "Unknown")
+        fg_color = list(data.get("fg_color", [255, 255, 255]))
+        
+        # Elite bonuses
+        if is_elite:
+            name = f"Elite {name}"
+            hp = int(hp * 2.5)
+            atk = int(atk * 1.5)
+            dfn = int(dfn + 2)
+            xp = int(xp * 3)
+            # Give elite monsters a distinct golden hue
+            fg_color = [255, 215, 0] # Gold
+            
         # Add components
         self.entity_manager.add_component(eid, Position(x=x, y=y))
-        self.entity_manager.add_component(eid, Name(value=data.get("name", "Unknown")))
+        self.entity_manager.add_component(eid, Name(value=name))
 
         # Color tuple conversion
-        fg_color = tuple(data.get("fg_color", [255, 255, 255]))
         self.entity_manager.add_component(
-            eid, Render(char=data.get("char", "?"), fg_color=fg_color)
+            eid, Render(char=data.get("char", "?"), fg_color=tuple(fg_color))
         )
 
-        hp = data.get("health", 10)
         self.entity_manager.add_component(eid, Health(current=hp, maximum=hp))
 
         self.entity_manager.add_component(
             eid,
-            Combat(attack_power=data.get("attack", 0), defense=data.get("defense", 0)),
+            Combat(attack_power=atk, defense=dfn),
         )
 
         self.entity_manager.add_component(
@@ -187,8 +247,8 @@ class EntityFactory:
             Monster(
                 ai_type=data.get("ai_type", "passive"),
                 monster_type=monster_type,
-                name=data.get("name", "Unknown"),
-                xp_reward=data.get("xp_reward", 0),
+                name=name,
+                xp_reward=xp,
             ),
         )
 

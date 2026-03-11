@@ -152,10 +152,31 @@ class Inventory(Component):
 
     capacity: int
     items: List[int]  # List of Entity IDs representing items
+    gold: int = 0
 
     def __post_init__(self):
         if self.items is None:
             self.items = []
+
+
+@dataclass(slots=True)
+class BankAccount(Component):
+    """Component for storing banked gold and items."""
+
+    gold: int = 0
+    items: List[int] = None
+    capacity: int = 50
+
+    def __post_init__(self):
+        if self.items is None:
+            self.items = []
+
+
+@dataclass(slots=True)
+class Banker(Component):
+    """Component to mark an NPC as a bank."""
+
+    bank_name: str = "The First Bank"
 
 
 @dataclass(slots=True)
@@ -164,7 +185,7 @@ class Equipment(Component):
 
     weapon: Optional[int] = None
     weapon_type: str = "melee"  # melee, distance, magic
-    
+
     # Armor Slots
     head: Optional[int] = None
     body: Optional[int] = None

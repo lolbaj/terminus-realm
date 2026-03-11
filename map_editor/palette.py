@@ -75,7 +75,25 @@ CATEGORIES = {
     "GROUND": [".", ",", "S", "*", "~", "=", "A", "I", "P"],
     "PLANTS": ["T", "C"],
     "WALLS": ["#", "+", "║", "═", "╔", "╗", "╚", "╝", "╠", "╦", "╣", "╩", "╬", "█"],
-    "MONSTERS": ["g", "o", "k", "r", "b", "U", "m", "h", "d", "w", "E", "q", "n", "j", "y", "p", "v"],
+    "MONSTERS": [
+        "g",
+        "o",
+        "k",
+        "r",
+        "b",
+        "U",
+        "m",
+        "h",
+        "d",
+        "w",
+        "E",
+        "q",
+        "n",
+        "j",
+        "y",
+        "p",
+        "v",
+    ],
     "ITEMS": ["!", "/", "[", "(", ")", "{", "}", "_", "-"],
     "SPECIAL": ["@", "<", ">"],
 }
@@ -94,18 +112,22 @@ def load_tile_palette() -> Dict[str, TileDef]:
                     " @", "Start", True, True, (255, 255, 255), (150, 0, 150)
                 )
                 continue
-            
+
             # Monster Handling
             if tid.startswith("m_"):
                 m_key = tid[2:]
                 data = game_monsters.get(m_key, {})
                 palette[char] = TileDef(
-                    char=data.get("char", "M ") if len(data.get("char", "")) == 2 else data.get("char", "M") + " ",
+                    char=(
+                        data.get("char", "M ")
+                        if len(data.get("char", "")) == 2
+                        else data.get("char", "M") + " "
+                    ),
                     name=data.get("name", m_key),
                     walkable=True,
                     transparent=True,
                     fg_color=tuple(data.get("fg_color", [255, 255, 255])),
-                    bg_color=None
+                    bg_color=None,
                 )
                 continue
 
@@ -114,12 +136,16 @@ def load_tile_palette() -> Dict[str, TileDef]:
                 i_key = tid[2:]
                 data = game_items.get(i_key, {})
                 palette[char] = TileDef(
-                    char=data.get("char", "I ") if len(data.get("char", "")) == 2 else data.get("char", "I") + " ",
+                    char=(
+                        data.get("char", "I ")
+                        if len(data.get("char", "")) == 2
+                        else data.get("char", "I") + " "
+                    ),
                     name=data.get("name", i_key),
                     walkable=True,
                     transparent=True,
                     fg_color=tuple(data.get("color", [255, 255, 255])),
-                    bg_color=None
+                    bg_color=None,
                 )
                 continue
 

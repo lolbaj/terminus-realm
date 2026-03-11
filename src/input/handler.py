@@ -136,7 +136,11 @@ class InputHandler:
                 if select.select([sys.stdin], [], [], 0.05) == ([sys.stdin], [], []):
                     next1 = sys.stdin.read(1)
                     if next1 == "[":
-                        if select.select([sys.stdin], [], [], 0.05) == ([sys.stdin], [], []):
+                        if select.select([sys.stdin], [], [], 0.05) == (
+                            [sys.stdin],
+                            [],
+                            [],
+                        ):
                             next2 = sys.stdin.read(1)
                             if next2 == "A":
                                 return InputEvent("move", 0, -1)  # Up
@@ -199,7 +203,11 @@ class InputHandler:
             if select.select([sys.stdin], [], [], 0.05) == ([sys.stdin], [], []):
                 next1 = sys.stdin.read(1)
                 if next1 == "[":
-                    if select.select([sys.stdin], [], [], 0.05) == ([sys.stdin], [], []):
+                    if select.select([sys.stdin], [], [], 0.05) == (
+                        [sys.stdin],
+                        [],
+                        [],
+                    ):
                         next2 = sys.stdin.read(1)
                         if next2 == "A":
                             return InputEvent("move", 0, -1)  # Up

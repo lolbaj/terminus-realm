@@ -104,6 +104,11 @@ class Renderer:
         game_state: str = "PLAYING",
         inventory_selection: int = 0,
         shop_id: int = None,
+        shop_mode: str = "BUY",
+        shop_selection: int = 0,
+        bank_id: int = None,
+        bank_mode: str = "DEPOSIT",
+        bank_selection: int = 0,
     ):
         """Render the current game state."""
         # Update dimensions to match current terminal size
@@ -131,15 +136,21 @@ class Renderer:
 
                 # Resize all buffers
                 new_prev_frame = np.full(new_max_shape, "  ", dtype=object)
-                new_prev_frame[:current_max_rows, :current_max_cols] = self.previous_frame
+                new_prev_frame[:current_max_rows, :current_max_cols] = (
+                    self.previous_frame
+                )
                 self.previous_frame = new_prev_frame
 
                 new_prev_fg = np.full((*new_max_shape, 3), -1, dtype=np.int16)
-                new_prev_fg[:current_max_rows, :current_max_cols] = self.previous_fg_buffer
+                new_prev_fg[:current_max_rows, :current_max_cols] = (
+                    self.previous_fg_buffer
+                )
                 self.previous_fg_buffer = new_prev_fg
 
                 new_prev_bg = np.full((*new_max_shape, 3), -1, dtype=np.int16)
-                new_prev_bg[:current_max_rows, :current_max_cols] = self.previous_bg_buffer
+                new_prev_bg[:current_max_rows, :current_max_cols] = (
+                    self.previous_bg_buffer
+                )
                 self.previous_bg_buffer = new_prev_bg
 
                 self.fg_color_buffer = np.full((*new_max_shape, 3), -1, dtype=np.int16)
@@ -198,7 +209,7 @@ class Renderer:
         if camera_x != self._last_cam_x or camera_y != self._last_cam_y:
             self._last_cam_x = camera_x
             self._last_cam_y = camera_y
-            # We don't necessarily need a full ANSI clear (\033[2J), 
+            # We don't necessarily need a full ANSI clear (\033[2J),
             # just wiping previous_frame will force redraw in _output_buffer
             self.needs_full_clear = True
 
@@ -360,28 +371,28 @@ class Renderer:
             # This prevents water tiles from changing color as they enter/leave the screen
             y_start = cam_y
             x_start = cam_x
-            
+
             # Create a shore mask for the visible slice
             # A tile is "shallow" if it's water but adjacent to land
             full_is_land = game_map.tiles != TILE_WATER
-            
+
             # Efficient neighbor check for the current slice
             # We use the full map's land-mask to avoid viewport edge artifacts
             land_slice = full_is_land[y_start:y_end, x_start:x_end]
-            
+
             # Check neighbors in the full map
             near_land = np.zeros_like(land_slice, dtype=bool)
             if y_start > 0:
-                near_land |= full_is_land[y_start-1:y_end-1, x_start:x_end]
+                near_land |= full_is_land[y_start - 1 : y_end - 1, x_start:x_end]
             if y_end < game_map.height:
-                near_land |= full_is_land[y_start+1:y_end+1, x_start:x_end]
+                near_land |= full_is_land[y_start + 1 : y_end + 1, x_start:x_end]
             if x_start > 0:
-                near_land |= full_is_land[y_start:y_end, x_start-1:x_end-1]
+                near_land |= full_is_land[y_start:y_end, x_start - 1 : x_end - 1]
             if x_end < game_map.width:
-                near_land |= full_is_land[y_start:y_end, x_start+1:x_end+1]
-                
+                near_land |= full_is_land[y_start:y_end, x_start + 1 : x_end + 1]
+
             shallows_mask = water_mask & near_land
-            
+
             t = current_time * 0.8  # Slightly slower for smoother flow
             yy, xx = np.ogrid[y_start:y_end, x_start:x_end]
 
@@ -404,7 +415,9 @@ class Renderer:
                     b_v[s_mask] = (140 + m[s_mask] * 20).astype(np.int16)
                 return r_v, g_v, b_v
 
-            r_f, g_f, b_f = get_water_color(motion[water_mask], shallows_mask[water_mask])
+            r_f, g_f, b_f = get_water_color(
+                motion[water_mask], shallows_mask[water_mask]
+            )
 
             # Foreground and Background synced for solid liquid look
             fg_colors[water_mask, 0] = r_f
@@ -636,78 +649,195 @@ class Renderer:
                     self.fg_color_buffer[y, bx] = bg_color
 
     def _render_shop(
-        self,
-        buffer: np.ndarray,
-        entity_manager: "EntityManager",
-        shop_id: int,
+        self, buffer, entity_manager, player_id, shop_id, mode, selection
     ):
-        """Render the shop window overlay."""
-        from entities.components import Shop
-
-        # Window dimensions
-        win_w = 40
-        win_h = 30
-
-        # Center the window
+        from entities.components import Shop, Inventory, Item
+        win_w, win_h = 50, 30
         buffer_w = self.screen_width // 2
-        start_x = (buffer_w - win_w) // 2
-        start_y = (self.screen_height - win_h) // 2
+        start_x = max(0, (buffer_w - win_w) // 2)
+        start_y = max(0, (self.screen_height - win_h) // 2)
 
-        # Clamp
-        if start_x < 0:
-            start_x = 0
-        if start_y < 0:
-            start_y = 0
-
-        # Draw Window Frame
         for y in range(win_h):
             for x in range(win_w):
-                bx = start_x + x
-                by = start_y + y
-
+                bx, by = start_x + x, start_y + y
                 if 0 <= bx < buffer_w and 0 <= by < self.screen_height - 1:
-                    # Clear background
                     buffer[by, bx] = " "
-                    self.fg_color_buffer[by, bx] = (255, 255, 255)
-                    self.bg_color_buffer[by, bx] = (30, 10, 10)  # Dark Red/Brown BG
-
-                    # Borders
+                    self.bg_color_buffer[by, bx] = (30, 20, 10)
+                    if x == 0 or x == win_w - 1:
+                        buffer[by, bx] = "│"
+                    if y == 0 or y == win_h - 1:
+                        buffer[by, bx] = "─"
+                    if x == 0 and y == 0:
+                        buffer[by, bx] = "┌"
+                    if x == win_w - 1 and y == 0:
+                        buffer[by, bx] = "┐"
+                    if x == 0 and y == win_h - 1:
+                        buffer[by, bx] = "└"
+                    if x == win_w - 1 and y == win_h - 1:
+                        buffer[by, bx] = "┘"
                     if x == 0 or x == win_w - 1 or y == 0 or y == win_h - 1:
-                        buffer[by, bx] = "$"
                         self.fg_color_buffer[by, bx] = (255, 215, 0)
 
-        # Get Shop Data
-        shop = None
-        if shop_id is not None:
-            shop = entity_manager.get_component(shop_id, Shop)
+        shop = entity_manager.get_component(shop_id, Shop)
+        inv = entity_manager.get_component(player_id, Inventory)
+        title = f" {shop.shop_name if shop else 'Shop'} "
+        for i, c in enumerate(title):
+            buffer[start_y, start_x + 2 + i] = c
 
-        title = shop.shop_name if shop else "Shop"
+        # Tabs
+        tab_buy = "[ BUY ]" if mode == "BUY" else "  BUY  "
+        tab_sell = "[ SELL ]" if mode == "SELL" else "  SELL  "
+        for i, c in enumerate(tab_buy):
+            buffer[start_y + 2, start_x + 2 + i] = c
+            self.fg_color_buffer[start_y + 2, start_x + 2 + i] = (
+                (255, 255, 0) if mode == "BUY" else (150, 150, 150)
+            )
+        for i, c in enumerate(tab_sell):
+            buffer[start_y + 2, start_x + 12 + i] = c
+            self.fg_color_buffer[start_y + 2, start_x + 12 + i] = (
+                (255, 255, 0) if mode == "SELL" else (150, 150, 150)
+            )
 
-        # Title
-        for i, char in enumerate(title):
-            if start_x + 2 + i < buffer_w:
-                buffer[start_y, start_x + 2 + i] = char
+        # Gold
+        g_txt = f"Gold: {inv.gold if inv else 0}g"
+        for i, c in enumerate(g_txt):
+            buffer[start_y + 2, start_x + win_w - 2 - len(g_txt) + i] = c
 
-        # List Items
-        if shop:
-            for i, (item_name, price) in enumerate(shop.items):
-                item_y = start_y + 2 + i
-                if item_y >= start_y + win_h - 1:
+        buffer[start_y + 4, start_x + 1] = "─" * (win_w - 2)
+
+        y_off = start_y + 6
+        if mode == "BUY" and shop:
+            for i, (iname, price) in enumerate(shop.items):
+                if y_off >= start_y + win_h - 2:
                     break
+                prefix = ">>" if i == selection else "  "
+                txt = f"{prefix} {iname} - {price}g"
+                color = (255, 255, 0) if i == selection else (200, 200, 200)
+                for j, c in enumerate(txt):
+                    buffer[y_off, start_x + 2 + j] = c
+                    self.fg_color_buffer[y_off, start_x + 2 + j] = color
+                y_off += 1
+        elif mode == "SELL" and inv:
+            for i, item_id in enumerate(inv.items):
+                if y_off >= start_y + win_h - 2:
+                    break
+                item = entity_manager.get_component(item_id, Item)
+                if not item:
+                    continue
+                price = max(1, item.value // 2)
+                prefix = ">>" if i == selection else "  "
+                txt = f"{prefix} {item.name} - {price}g"
+                color = (255, 255, 0) if i == selection else item.color
+                for j, c in enumerate(txt):
+                    buffer[y_off, start_x + 2 + j] = c
+                    self.fg_color_buffer[y_off, start_x + 2 + j] = color
+                y_off += 1
 
-                # Draw Item Name and Price
-                text = f"{item_name}: {price}g"
+    def _render_bank(
+        self, buffer, entity_manager, player_id, bank_id, mode, selection
+    ):
+        from entities.components import Banker, BankAccount, Inventory, Item
+        win_w, win_h = 50, 30
+        buffer_w = self.screen_width // 2
+        start_x = max(0, (buffer_w - win_w) // 2)
+        start_y = max(0, (self.screen_height - win_h) // 2)
 
-                for j, char in enumerate(text):
-                    bx = start_x + 2 + j
-                    if (
-                        bx < start_x + win_w - 1
-                        and 0 <= item_y < self.screen_height - 1
-                    ):
-                        buffer[item_y, bx] = char
-                        self.fg_color_buffer[item_y, bx] = (200, 200, 200)
-        else:
-            buffer[start_y + 2, start_x + 2] = "Shop Closed"
+        for y in range(win_h):
+            for x in range(win_w):
+                bx, by = start_x + x, start_y + y
+                if 0 <= bx < buffer_w and 0 <= by < self.screen_height - 1:
+                    buffer[by, bx] = " "
+                    self.bg_color_buffer[by, bx] = (10, 20, 30)
+                    if x == 0 or x == win_w - 1:
+                        buffer[by, bx] = "│"
+                    if y == 0 or y == win_h - 1:
+                        buffer[by, bx] = "─"
+                    if x == 0 and y == 0:
+                        buffer[by, bx] = "┌"
+                    if x == win_w - 1 and y == 0:
+                        buffer[by, bx] = "┐"
+                    if x == 0 and y == win_h - 1:
+                        buffer[by, bx] = "└"
+                    if x == win_w - 1 and y == win_h - 1:
+                        buffer[by, bx] = "┘"
+                    if x == 0 or x == win_w - 1 or y == 0 or y == win_h - 1:
+                        self.fg_color_buffer[by, bx] = (100, 200, 255)
+
+        banker = entity_manager.get_component(bank_id, Banker)
+        bank = entity_manager.get_component(player_id, BankAccount)
+        inv = entity_manager.get_component(player_id, Inventory)
+
+        title = f" {banker.bank_name if banker else 'Bank'} "
+        for i, c in enumerate(title):
+            buffer[start_y, start_x + 2 + i] = c
+
+        tab_dep = "[ DEPOSIT ]" if mode == "DEPOSIT" else "  DEPOSIT  "
+        tab_wit = "[ WITHDRAW ]" if mode == "WITHDRAW" else "  WITHDRAW  "
+        for i, c in enumerate(tab_dep):
+            buffer[start_y + 2, start_x + 2 + i] = c
+            self.fg_color_buffer[start_y + 2, start_x + 2 + i] = (
+                (255, 255, 0) if mode == "DEPOSIT" else (150, 150, 150)
+            )
+        for i, c in enumerate(tab_wit):
+            buffer[start_y + 2, start_x + 15 + i] = c
+            self.fg_color_buffer[start_y + 2, start_x + 15 + i] = (
+                (255, 255, 0) if mode == "WITHDRAW" else (150, 150, 150)
+            )
+
+        g_txt = (
+            f"Inv: {inv.gold if inv else 0}g | Vault: {bank.gold if bank else 0}g"
+        )
+        for i, c in enumerate(g_txt):
+            buffer[start_y + 2, start_x + win_w - 2 - len(g_txt) + i] = c
+
+        buffer[start_y + 4, start_x + 1] = "─" * (win_w - 2)
+
+        y_off = start_y + 6
+        if mode == "DEPOSIT" and inv:
+            # Gold deposit
+            prefix = ">>" if selection == 0 else "  "
+            txt = f"{prefix} Deposit 10 Gold"
+            for j, c in enumerate(txt):
+                buffer[y_off, start_x + 2 + j] = c
+                self.fg_color_buffer[y_off, start_x + 2 + j] = (255, 215, 0)
+            y_off += 2
+
+            for i, item_id in enumerate(inv.items):
+                if y_off >= start_y + win_h - 2:
+                    break
+                item = entity_manager.get_component(item_id, Item)
+                if not item:
+                    continue
+                prefix = ">>" if i + 1 == selection else "  "
+                txt = f"{prefix} {item.name}"
+                color = (255, 255, 0) if i + 1 == selection else item.color
+                for j, c in enumerate(txt):
+                    buffer[y_off, start_x + 2 + j] = c
+                    self.fg_color_buffer[y_off, start_x + 2 + j] = color
+                y_off += 1
+
+        elif mode == "WITHDRAW" and bank:
+            # Gold withdraw
+            prefix = ">>" if selection == 0 else "  "
+            txt = f"{prefix} Withdraw 10 Gold"
+            for j, c in enumerate(txt):
+                buffer[y_off, start_x + 2 + j] = c
+                self.fg_color_buffer[y_off, start_x + 2 + j] = (255, 215, 0)
+            y_off += 2
+
+            for i, item_id in enumerate(bank.items):
+                if y_off >= start_y + win_h - 2:
+                    break
+                item = entity_manager.get_component(item_id, Item)
+                if not item:
+                    continue
+                prefix = ">>" if i + 1 == selection else "  "
+                txt = f"{prefix} {item.name}"
+                color = (255, 255, 0) if i + 1 == selection else item.color
+                for j, c in enumerate(txt):
+                    buffer[y_off, start_x + 2 + j] = c
+                    self.fg_color_buffer[y_off, start_x + 2 + j] = color
+                y_off += 1
 
     def _render_help(self, buffer: np.ndarray):
         """Render the help screen overlay."""
@@ -864,121 +994,106 @@ class Renderer:
 
     def _render_inventory(
         self,
-        buffer: np.ndarray,
-        entity_manager: "EntityManager",
-        player_id: int,
-        selection: int,
+        buffer,
+        entity_manager,
+        player_id,
+        selection,
     ):
-        """Render the inventory window overlay."""
         from entities.components import Inventory, Item, Equipment
-
-        # Window dimensions
-        win_w = 40
-        win_h = 30
-
-        # Center the window
-        # Buffer width is screen_width // 2
+        win_w, win_h = 50, 30
         buffer_w = self.screen_width // 2
-        start_x = (buffer_w - win_w) // 2
-        start_y = (self.screen_height - win_h) // 2
-
-        # Clamp
-        if start_x < 0:
-            start_x = 0
-        if start_y < 0:
-            start_y = 0
+        start_x = max(0, (buffer_w - win_w) // 2)
+        start_y = max(0, (self.screen_height - win_h) // 2)
 
         # Draw Window Frame
         for y in range(win_h):
             for x in range(win_w):
-                bx = start_x + x
-                by = start_y + y
-
+                bx, by = start_x + x, start_y + y
                 if 0 <= bx < buffer_w and 0 <= by < self.screen_height - 1:
-                    # Clear background
                     buffer[by, bx] = " "
                     self.fg_color_buffer[by, bx] = (255, 255, 255)
-                    self.bg_color_buffer[by, bx] = (10, 10, 30)  # Dark Blue/Black BG
+                    self.bg_color_buffer[by, bx] = (15, 15, 25)
 
-                    # Borders
+                    if x == 0 or x == win_w - 1:
+                        buffer[by, bx] = "│"
+                    if y == 0 or y == win_h - 1:
+                        buffer[by, bx] = "─"
+                    if x == 0 and y == 0:
+                        buffer[by, bx] = "┌"
+                    if x == win_w - 1 and y == 0:
+                        buffer[by, bx] = "┐"
+                    if x == 0 and y == win_h - 1:
+                        buffer[by, bx] = "└"
+                    if x == win_w - 1 and y == win_h - 1:
+                        buffer[by, bx] = "┘"
+
                     if x == 0 or x == win_w - 1 or y == 0 or y == win_h - 1:
-                        buffer[by, bx] = "#"
-                        self.fg_color_buffer[by, bx] = (100, 100, 200)
+                        self.fg_color_buffer[by, bx] = (100, 150, 255)
 
-        # Title
-        title = " INVENTORY "
+        title = " 🎒 INVENTORY "
         for i, char in enumerate(title):
             if start_x + 2 + i < buffer_w:
                 buffer[start_y, start_x + 2 + i] = char
+                self.fg_color_buffer[start_y, start_x + 2 + i] = (255, 215, 0)
 
-        # Display Equipped Items
         equip = entity_manager.get_component(player_id, Equipment)
-        equip_y = start_y + 2
-
-        if equip:
-            def get_item_name(eid):
-                if eid is None:
-                    return "None"
-                it = entity_manager.get_component(eid, Item)
-                return it.name if it else "Unknown"
-
-            # Draw equipment slots
-            slots = [
-                (f"Wpn: {get_item_name(equip.weapon)} ({equip.weapon_type})"),
-                (f"Head: {get_item_name(equip.head)}"),
-                (f"Body: {get_item_name(equip.body)}"),
-                (f"Legs: {get_item_name(equip.legs)}"),
-                (f"Shield: {get_item_name(equip.shield)}")
-            ]
-
-            for i, text in enumerate(slots):
-                for j, char in enumerate(text):
-                    if start_x + 2 + j < buffer_w:
-                        buffer[equip_y + i, start_x + 2 + j] = char
-                        self.fg_color_buffer[equip_y + i, start_x + 2 + j] = (100, 200, 255)
-
-            equip_y += len(slots) + 1  # Add spacing
-
-        # List Items
         inv = entity_manager.get_component(player_id, Inventory)
 
-        if inv:
-            for i, item_id in enumerate(inv.items):
-                item_y = equip_y + i
-                if item_y >= start_y + win_h - 1:
-                    break
+        y_offset = start_y + 2
 
-                item_comp = entity_manager.get_component(item_id, Item)
-                if not item_comp:
+        # Gold
+        gold_txt = f"💰 Gold: {inv.gold if inv else 0}"
+        for i, char in enumerate(gold_txt):
+            buffer[y_offset, start_x + 2 + i] = char
+            self.fg_color_buffer[y_offset, start_x + 2 + i] = (255, 215, 0)
+        y_offset += 2
+
+        if equip:
+
+            def gname(eid):
+                return (
+                    entity_manager.get_component(eid, Item).name
+                    if eid
+                    else "None"
+                )
+
+            slots = [
+                f"Wpn: {gname(equip.weapon)}",
+                f"Head: {gname(equip.head)}",
+                f"Body: {gname(equip.body)}",
+                f"Legs: {gname(equip.legs)}",
+                f"Shield: {gname(equip.shield)}",
+            ]
+            for s in slots:
+                for i, char in enumerate(s):
+                    buffer[y_offset, start_x + 2 + i] = char
+                y_offset += 1
+            y_offset += 1
+
+        if inv:
+            buffer[y_offset, start_x + 2] = "─" * (win_w - 4)
+            y_offset += 1
+            for i, item_id in enumerate(inv.items):
+                if y_offset >= start_y + win_h - 2:
+                    break
+                item = entity_manager.get_component(item_id, Item)
+                if not item:
                     continue
 
-                # Draw Item Name
-                prefix = "> " if i == selection else "  "
-                name = f"{prefix}{item_comp.char} {item_comp.name}"
-
-                color = item_comp.color
-                if i == selection:
-                    color = (255, 255, 0)  # Highlight selected
+                prefix = ">>" if i == selection else "  "
+                name = f"{prefix} {item.char} {item.name}"
+                color = item.color if i != selection else (255, 255, 0)
 
                 for j, char in enumerate(name):
                     bx = start_x + 2 + j
-                    if (
-                        bx < start_x + win_w - 1
-                        and 0 <= item_y < self.screen_height - 1
-                    ):
-                        buffer[item_y, bx] = char
-                        self.fg_color_buffer[item_y, bx] = color
+                    if bx < start_x + win_w - 1:
+                        buffer[y_offset, bx] = char
+                        self.fg_color_buffer[y_offset, bx] = color
+                y_offset += 1
 
-            # Capacity Info
-            cap_info = f"Capacity: {len(inv.items)}/{inv.capacity}"
-            for i, char in enumerate(cap_info):
-                bx = start_x + 2 + i
-                by = start_y + win_h - 2
-                if bx < buffer_w and 0 <= by < self.screen_height - 1:
-                    buffer[by, bx] = char
-                    self.fg_color_buffer[by, bx] = (150, 150, 150)
-        else:
-            buffer[equip_y, start_x + 2] = "No Inventory Component!"
+            cap = f"Capacity: {len(inv.items)}/{inv.capacity}"
+            for i, c in enumerate(cap):
+                buffer[start_y + win_h - 2, start_x + 2 + i] = c
 
     def _render_ui(
         self,
@@ -1132,14 +1247,18 @@ class Renderer:
                         if fg[0] == -1:
                             render_commands.append("\033[39m")
                         else:
-                            render_commands.append(f"\033[38;2;{fg[0]};{fg[1]};{fg[2]}m")
+                            render_commands.append(
+                                f"\033[38;2;{fg[0]};{fg[1]};{fg[2]}m"
+                            )
                         last_fg = fg
 
                     if bg != last_bg:
                         if bg[0] == -1:
                             render_commands.append("\033[49m")
                         else:
-                            render_commands.append(f"\033[48;2;{bg[0]};{bg[1]};{bg[2]}m")
+                            render_commands.append(
+                                f"\033[48;2;{bg[0]};{bg[1]};{bg[2]}m"
+                            )
                         last_bg = bg
 
                     # Render and enforce 2-column width
@@ -1148,7 +1267,7 @@ class Renderer:
                             # Emoji/Wide char - most terms handle as width 2
                             render_commands.append(char)
                             # Emojis often cause drift; force a cursor move for the next cell
-                            v_cursor_x = -1 
+                            v_cursor_x = -1
                         else:
                             # ASCII - pad to width 2
                             render_commands.append(char + " ")

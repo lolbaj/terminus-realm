@@ -32,7 +32,7 @@ def load_static_chunks() -> Dict[Tuple[int, int], List[str]]:
                 # Handle multi-line string format
                 if isinstance(layout, str):
                     layout = layout.strip().split("\n")
-                
+
                 if isinstance(fg_layout, str):
                     fg_layout = fg_layout.strip().split("\n")
 
