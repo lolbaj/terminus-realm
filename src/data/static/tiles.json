@@ -13,5 +13,12 @@
   "11": { "name": "lava", "char": "  ", "fg": [255, 80, 0], "bg": [90, 0, 0], "walkable": false, "transparent": true },
   "12": { "name": "ash", "char": "  ", "fg": [115, 115, 115], "bg": [55, 55, 55], "walkable": true, "transparent": true },
   "13": { "name": "cactus", "char": "ψ ", "fg": [80, 220, 80], "bg": [195, 175, 115], "walkable": false, "transparent": true },
-  "14": { "name": "ice", "char": "  ", "fg": [190, 235, 255], "bg": [130, 175, 225], "walkable": true, "transparent": true }
+  "14": { "name": "ice", "char": "  ", "fg": [190, 235, 255], "bg": [130, 175, 225], "walkable": true, "transparent": true },
+  "15": { "name": "flower_red", "char": "✿ ", "fg": [255, 100, 100], "bg": [65, 110, 65], "walkable": true, "transparent": true },
+  "16": { "name": "flower_blue", "char": "❀ ", "fg": [100, 150, 255], "bg": [65, 110, 65], "walkable": true, "transparent": true },
+  "17": { "name": "flower_white", "char": "✾ ", "fg": [255, 255, 255], "bg": [65, 110, 65], "walkable": true, "transparent": true },
+  "18": { "name": "mushroom", "char": "🍄", "fg": [255, 255, 255], "bg": [44, 175, 44], "walkable": true, "transparent": true },
+  "19": { "name": "rock_small", "char": "🪨", "fg": [150, 150, 160], "bg": [65, 110, 65], "walkable": true, "transparent": true },
+  "20": { "name": "bush", "char": "🌳", "fg": [100, 255, 100], "bg": [44, 175, 44], "walkable": false, "transparent": false },
+  "21": { "name": "wall_ruined", "char": "░░", "fg": [100, 100, 110], "bg": [40, 40, 45], "walkable": false, "transparent": false }
 }

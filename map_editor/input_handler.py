@@ -4,7 +4,7 @@ Separates key processing from the main editor loop.
 """
 
 from typing import TYPE_CHECKING
-from .models import EditorMode, Selection
+from .models import EditorMode, Selection, SymmetryMode
 from . import tools
 import sys
 import os
@@ -213,6 +213,7 @@ class InputHandler:
                 self.editor.cursor_y,
                 self._get_active_tile(),
                 self.editor.brush_size,
+                self.editor.symmetry_mode,
             )
 
     def _get_active_tile(self) -> str:
@@ -279,6 +280,14 @@ class InputHandler:
             self.editor.status_message = (
                 f"Visibility: {self.editor.layer_visibility.upper()}"
             )
+
+        # Symmetry Toggle
+        elif k.lower() == "y":
+            modes = list(SymmetryMode)
+            self.editor.symmetry_mode = modes[
+                (modes.index(self.editor.symmetry_mode) + 1) % len(modes)
+            ]
+            self.editor.status_message = f"Symmetry: {self.editor.symmetry_mode.name}"
 
         # Erase Mode Toggle
         elif k.lower() == "e":
@@ -354,6 +363,7 @@ class InputHandler:
                     self.editor.cursor_y,
                     self._get_active_tile(),
                     self.editor.brush_size,
+                    self.editor.symmetry_mode,
                 )
             else:
                 self.editor.undo_mgr.end_group()
@@ -408,6 +418,7 @@ class InputHandler:
                     self.editor.cursor_y,
                     self._get_active_tile(),
                     self.editor.brush_size,
+                    self.editor.symmetry_mode,
                 )
         elif k.lower() == "r":
             self.editor.current_tile = self.editor.map_mgr.get_tile(
@@ -431,6 +442,7 @@ class InputHandler:
                     self.editor.cursor_x,
                     self.editor.cursor_y,
                     self._get_active_tile(),
+                    self.editor.symmetry_mode,
                 )
                 self.editor.selection_start, self.editor.mode = None, EditorMode.DRAW
         elif k.lower() == "s":
@@ -544,6 +556,7 @@ class InputHandler:
                 self.editor.cursor_y,
                 target,
                 self._get_active_tile(),
+                self.editor.symmetry_mode,
             )
 
         # Brush Size

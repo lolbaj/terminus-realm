@@ -192,8 +192,52 @@ class PersistentWorld:
         self.world_map[mask_high_hill] = TILE_GRASS
         self.biome_map[mask_high_hill] = "hill"
 
+        # 5. Place Decorations (Vectorized)
+        from world.map import (
+            TILE_FLOWER_RED,
+            TILE_FLOWER_BLUE,
+            TILE_FLOWER_WHITE,
+            TILE_MUSHROOM,
+            TILE_ROCK_SMALL,
+            TILE_BUSH,
+        )
+
+        decor_noise = np.random.random((self.world_height, self.world_width))
+
+        # Flowers in grasslands/plains
+        mask_flowers = (
+            (self.biome_map == "grassland") | (self.biome_map == "plains")
+        ) & (self.world_map == TILE_GRASS)
+        
+        red_flower_mask = mask_flowers & (decor_noise < 0.02)
+        blue_flower_mask = mask_flowers & (decor_noise >= 0.02) & (decor_noise < 0.04)
+        white_flower_mask = mask_flowers & (decor_noise >= 0.04) & (decor_noise < 0.05)
+        
+        self.world_map[red_flower_mask] = TILE_FLOWER_RED
+        self.world_map[blue_flower_mask] = TILE_FLOWER_BLUE
+        self.world_map[white_flower_mask] = TILE_FLOWER_WHITE
+
+        # Mushrooms in forests
+        mask_mushrooms = (self.biome_map == "forest") & (self.world_map == TILE_GRASS)
+        self.world_map[mask_mushrooms & (decor_noise < 0.03)] = TILE_MUSHROOM
+
+        # Rocks in mountains and hills
+        mask_rocks = (
+            (self.biome_map == "mountain") | (self.biome_map == "hill")
+        ) & (self.world_map == TILE_GRASS)
+        self.world_map[mask_rocks & (decor_noise < 0.05)] = TILE_ROCK_SMALL
+
+        # Bushes in plains and forests
+        mask_bushes = (
+            (self.biome_map == "plains") | (self.biome_map == "forest")
+        ) & (self.world_map == TILE_GRASS)
+        self.world_map[mask_bushes & (decor_noise < 0.04)] = TILE_BUSH
+
         # Define special areas (towns, dungeons, etc.)
         self._define_special_areas(elevation_map, moisture_map)
+
+        # Place procedural ruins/landmarks
+        self._generate_procedural_structures()
 
         # Apply STATIC_CHUNKS (overwriting procedural generation)
         chunk_size = 50  # Fixed size for static chunks
@@ -376,6 +420,55 @@ class PersistentWorld:
             f"Defined {town_count} towns, {dungeon_count} dungeons, {forest_count} forests, and {desert_count} deserts"
         )
 
+    def _generate_procedural_structures(self):
+        """Place small ruins and landmarks across the world."""
+        from world.map import TILE_WALL_RUINED, TILE_PAVEMENT, TILE_WALL, TILE_FLOOR, TILE_STAIRS_DOWN
+        import random
+
+        # 1. Generate Ruins (Small clusters of broken walls)
+        num_ruins = 20
+        for _ in range(num_ruins):
+            rx = random.randint(50, self.world_width - 50)
+            ry = random.randint(50, self.world_height - 50)
+            
+            # Don't place in ocean or towns
+            if self.biome_map[ry, rx] in ("ocean", "town", "void"):
+                continue
+                
+            ruin_size = random.randint(3, 6)
+            for dx in range(-ruin_size, ruin_size + 1):
+                for dy in range(-ruin_size, ruin_size + 1):
+                    if random.random() < 0.3:
+                        wx, wy = rx + dx, ry + dy
+                        if 0 <= wx < self.world_width and 0 <= wy < self.world_height:
+                            # Replace only traversable tiles
+                            if self.world_map[wy, wx] not in (TILE_WALL, TILE_STAIRS_DOWN):
+                                self.world_map[wy, wx] = TILE_WALL_RUINED if random.random() < 0.7 else TILE_PAVEMENT
+
+        # 2. Generate Shrines (Sparse landmarks)
+        num_shrines = 8
+        for _ in range(num_shrines):
+            sx = random.randint(100, self.world_width - 100)
+            sy = random.randint(100, self.world_height - 100)
+            
+            if self.biome_map[sy, sx] in ("ocean", "town", "void"):
+                continue
+                
+            # 3x3 Altar structure
+            # #P#
+            # P.P
+            # #P#
+            for dy in range(-1, 2):
+                for dx in range(-1, 2):
+                    wx, wy = sx + dx, sy + dy
+                    if 0 <= wx < self.world_width and 0 <= wy < self.world_height:
+                        if abs(dx) == 1 and abs(dy) == 1:
+                            self.world_map[wy, wx] = TILE_WALL
+                        elif dx == 0 and dy == 0:
+                            self.world_map[wy, wx] = TILE_FLOOR
+                        else:
+                            self.world_map[wy, wx] = TILE_PAVEMENT
+
     def load_world(self):
         """Load the persistent world from file, or generate if it doesn't exist."""
         if os.path.exists(self.world_file):
@@ -455,6 +548,7 @@ class PersistentWorld:
 
         # Create a new GameMap for this chunk
         chunk_map = GameMap(chunk_size, chunk_size)
+        chunk_map.biome_map = np.full((chunk_size, chunk_size), "void", dtype=object)
 
         # Calculate intersection with world bounds
         wsx = max(0, world_start_x)
@@ -472,13 +566,14 @@ class PersistentWorld:
 
             # Slice copy (Fast!)
             chunk_map.tiles[csy:cey, csx:cex] = self.world_map[wsy:wey, wsx:wex]
+            chunk_map.biome_map[csy:cey, csx:cex] = self.biome_map[wsy:wey, wsx:wex]
 
         return chunk_map
 
     def get_full_game_map(self) -> GameMap:
         """Get the entire world as a single GameMap for seamless play."""
         # Instantiate with direct reference to world_map to avoid allocation
-        game_map = GameMap(self.world_width, self.world_height, tiles=self.world_map)
+        game_map = GameMap(self.world_width, self.world_height, tiles=self.world_map, biome_map=self.biome_map)
 
         # Initialize explored status based on some logic if needed?
         # For now, it defaults to False (Hidden)

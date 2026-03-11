@@ -243,6 +243,9 @@ class Renderer:
             render_buffer, entity_manager, player_id, messages, start_x, start_y
         )
 
+        # Render ambient particles (Overlay on top of map but behind UI)
+        self._render_particles(render_buffer, camera_x, camera_y, game_map, start_x, start_y)
+
         # Overlays
         if game_state == "INVENTORY":
             self._render_inventory(
@@ -302,22 +305,92 @@ class Renderer:
         bg_colors = game_map.tile_bg_color_lookup[tiles_slice].copy()
 
         # Handle Procedural Grass Detail
-        from world.map import TILE_GRASS, TILE_LAVA, TILE_WATER
+        from world.map import (
+            TILE_GRASS,
+            TILE_LAVA,
+            TILE_WATER,
+            TILE_SNOW,
+            TILE_ASH,
+            TILE_TREE,
+            TILE_BUSH,
+            TILE_FLOWER_RED,
+            TILE_FLOWER_BLUE,
+            TILE_FLOWER_WHITE,
+            TILE_WALL_RUINED,
+            TILE_SAND,
+            TILE_CACTUS,
+        )
 
+        yy, xx = np.ogrid[cam_y:y_end, cam_x:x_end]
+
+        # --- Flora Sway Animation ---
+        flora_mask = (
+            (tiles_slice == TILE_TREE)
+            | (tiles_slice == TILE_BUSH)
+            | (tiles_slice == TILE_FLOWER_RED)
+            | (tiles_slice == TILE_FLOWER_BLUE)
+            | (tiles_slice == TILE_FLOWER_WHITE)
+        )
+        if np.any(flora_mask):
+            sway = np.sin(current_time * 1.5 + xx * 0.5 + yy * 0.3) * 0.1
+            # Shift green channel slightly for sway effect
+            fg_colors[flora_mask, 1] = np.clip(
+                fg_colors[flora_mask, 1] * (1.0 + sway[flora_mask]), 0, 255
+            ).astype(np.int16)
+
+        # --- Enhanced Grass ---
         grass_mask = tiles_slice == TILE_GRASS
         if np.any(grass_mask):
-            # Revert to normal solid green from 1st commit
-            fg_colors[grass_mask] = [50, 200, 50]
-            bg_colors[grass_mask] = [34, 160, 34]
-            chars[grass_mask] = "  "
+            wind = (np.sin(current_time * 0.8 + xx * 0.2 + yy * 0.1) + 1.0) / 2.0
+            fg_colors[grass_mask] = [50, 180 + int(wind.mean() * 40), 50]
+            bg_colors[grass_mask] = [30, 140 + int(wind.mean() * 20), 30]
+            
+            # Add occasional grass blades
+            blade_noise = ((xx * 13 + yy * 19) % 31) / 31.0
+            blades = grass_mask & (blade_noise > 0.92)
+            chars[blades] = ", "
+
+        # --- Sparkling Snow ---
+        snow_mask = tiles_slice == TILE_SNOW
+        if np.any(snow_mask):
+            sparkle = np.random.random(tiles_slice.shape) > 0.98
+            active_sparkle = snow_mask & sparkle & (np.sin(current_time * 4) > 0)
+            
+            fg_colors[snow_mask] = [240, 245, 255]
+            bg_colors[snow_mask] = [220, 230, 250]
+            chars[snow_mask] = "  "
+            
+            if np.any(active_sparkle):
+                chars[active_sparkle] = "* "
+                fg_colors[active_sparkle] = [255, 255, 255]
+
+        # --- Pulsing Ash & Embers ---
+        ash_mask = tiles_slice == TILE_ASH
+        if np.any(ash_mask):
+            pulse = (np.sin(current_time * 2.0 + xx * 0.1 + yy * 0.1) + 1.0) / 2.0
+            fg_colors[ash_mask] = [100 + pulse.mean() * 40, 80, 80]
+            bg_colors[ash_mask] = [40 + pulse.mean() * 30, 20, 20]
+            
+            ember_noise = ((xx * 23 + yy * 29) % 37) / 37.0
+            embers = ash_mask & (ember_noise > 0.95) & (pulse > 0.7)
+            chars[embers] = ". "
+            fg_colors[embers] = [255, 150, 50]
+
+        # --- Ruined Wall Detail ---
+        ruin_mask = tiles_slice == TILE_WALL_RUINED
+        if np.any(ruin_mask):
+            crack_noise = ((xx * 41 + yy * 43) % 47) / 47.0
+            chars[ruin_mask] = "▒▒"
+            chars[ruin_mask & (crack_noise > 0.7)] = "░░"
+            chars[ruin_mask & (crack_noise > 0.9)] = "  "
+            fg_colors[ruin_mask] = [90, 95, 100]
+            bg_colors[ruin_mask] = [35, 35, 40]
 
         # Handle Procedural Lava Texture
         lava_mask = tiles_slice == TILE_LAVA
         if np.any(lava_mask):
             t = current_time * 0.3  # Slow, viscous flow
-            yy, xx = np.ogrid[cam_y:y_end, cam_x:x_end]
-
-            # Dynamic flow with multiple octaves
+            # (Lava logic remains similar but uses pre-calculated yy, xx)
             flow_1 = np.sin(xx * 0.2 + t * 0.5) * np.cos(yy * 0.3 - t * 0.3)
             flow_2 = np.sin(yy * 0.15 + t * 0.8) * np.cos(xx * 0.25 + t * 0.4)
             combined_flow = (flow_1 + flow_2 * 0.5 + 1.5) / 3.0
@@ -368,16 +441,11 @@ class Renderer:
         water_mask = tiles_slice == TILE_WATER
         if np.any(water_mask):
             # Viewport-independent shore detection using the full map
-            # This prevents water tiles from changing color as they enter/leave the screen
             y_start = cam_y
             x_start = cam_x
 
             # Create a shore mask for the visible slice
-            # A tile is "shallow" if it's water but adjacent to land
             full_is_land = game_map.tiles != TILE_WATER
-
-            # Efficient neighbor check for the current slice
-            # We use the full map's land-mask to avoid viewport edge artifacts
             land_slice = full_is_land[y_start:y_end, x_start:x_end]
 
             # Check neighbors in the full map
@@ -393,30 +461,42 @@ class Renderer:
 
             shallows_mask = water_mask & near_land
 
-            t = current_time * 0.8  # Slightly slower for smoother flow
-            yy, xx = np.ogrid[y_start:y_end, x_start:x_end]
+            # Biome check for water type (Swamp/Oasis)
+            biome_slice = game_map.biome_map[cam_y:y_end, cam_x:x_end] if hasattr(game_map, 'biome_map') else None
+            is_swamp = (biome_slice == "swamp") if biome_slice is not None else False
 
+            t = current_time * 0.8
             # Simplified flow for stability
             flow = (np.sin(xx * 0.2 + t) * np.cos(yy * 0.2 - t * 0.5) + 1.0) / 2.0
             motion = (np.sin(xx * 0.1 + flow * 2.0) + 1.0) / 2.0
 
-            def get_water_color(m, shallows):
+            def get_water_color(m, shallows, swamp):
                 # Deep water: Dark blue-teal
                 r_v = (15 + m * 10).astype(np.int16)
                 g_v = (60 + m * 20).astype(np.int16)
                 b_v = (130 + m * 40).astype(np.int16)
 
+                if np.any(swamp):
+                    # Swamp water: Murky green/brown
+                    r_v[swamp] = (40 + m[swamp] * 10).astype(np.int16)
+                    g_v[swamp] = (80 + m[swamp] * 15).astype(np.int16)
+                    b_v[swamp] = (30 + m[swamp] * 10).astype(np.int16)
+
                 if np.any(shallows):
-                    # Shallow water: Blend towards grass/sand colors (more green/yellow)
+                    # Shallow water: Blend towards grass/sand colors
                     s_mask = shallows
-                    # Greener/lighter for the shore
-                    r_v[s_mask] = (40 + m[s_mask] * 15).astype(np.int16)
-                    g_v[s_mask] = (120 + m[s_mask] * 30).astype(np.int16)
-                    b_v[s_mask] = (140 + m[s_mask] * 20).astype(np.int16)
+                    if np.any(swamp & s_mask):
+                        # Murky shallows
+                        r_v[swamp & s_mask] = (60 + m[swamp & s_mask] * 15).astype(np.int16)
+                        g_v[swamp & s_mask] = (100 + m[swamp & s_mask] * 20).astype(np.int16)
+                    else:
+                        r_v[s_mask] = (40 + m[s_mask] * 15).astype(np.int16)
+                        g_v[s_mask] = (120 + m[s_mask] * 30).astype(np.int16)
+                        b_v[s_mask] = (140 + m[s_mask] * 20).astype(np.int16)
                 return r_v, g_v, b_v
 
             r_f, g_f, b_f = get_water_color(
-                motion[water_mask], shallows_mask[water_mask]
+                motion[water_mask], shallows_mask[water_mask], is_swamp[water_mask] if np.any(is_swamp) else False
             )
 
             # Foreground and Background synced for solid liquid look
@@ -426,18 +506,12 @@ class Renderer:
             bg_colors[water_mask, 0] = r_f
             bg_colors[water_mask, 1] = g_f
             bg_colors[water_mask, 2] = b_f
-
-            # Use pure background color
             chars[water_mask] = "  "
 
         # Handle Procedural Sand Dunes
-        from world.map import TILE_SAND, TILE_CACTUS
-
         sand_mask = (tiles_slice == TILE_SAND) | (tiles_slice == TILE_CACTUS)
         if np.any(sand_mask):
             t = current_time * 0.2
-            yy, xx = np.ogrid[cam_y:y_end, cam_x:x_end]
-
             # Broad, slow sweeps for dunes to avoid pixelation
             dune_wave = (
                 np.sin(xx * 0.04 + t * 0.5) * 0.5
@@ -446,34 +520,26 @@ class Renderer:
             ) / 2.0
 
             def get_sand_color(d):
-                # Classic golden desert colors from 1st commit
                 r = np.clip(210 + d * 20, 0, 255).astype(np.int16)
                 g = np.clip(190 + d * 15, 0, 255).astype(np.int16)
                 b = np.clip(120 + d * 10, 0, 255).astype(np.int16)
                 return r, g, b
 
             r_s, g_s, b_s = get_sand_color(dune_wave[sand_mask])
-
             bg_colors[sand_mask, 0] = r_s
             bg_colors[sand_mask, 1] = g_s
             bg_colors[sand_mask, 2] = b_s
-
-            # Pure color sand - no characters
             chars[sand_mask] = "  "
 
             # Ensure TILE_CACTUS keeps its character
             cactus_only = sand_mask & (tiles_slice == TILE_CACTUS)
             if np.any(cactus_only):
                 chars[cactus_only] = "ψ "
-                fg_colors[cactus_only, 0] = 100
-                fg_colors[cactus_only, 1] = 220
-                fg_colors[cactus_only, 2] = 100
+                fg_colors[cactus_only] = [100, 220, 100]
 
         # Handle Procedural Floor Texture
         floor_mask = tiles_slice == 0
         if np.any(floor_mask):
-            yy, xx = np.ogrid[cam_y:y_end, cam_x:x_end]
-
             # Better stone variety and large-scale wear
             stone_noise = ((xx * 17 + yy * 23) % 29) / 29.0
             wear_large = (np.sin(xx * 0.15) * np.cos(yy * 0.1) + 1.0) / 2.0
@@ -504,44 +570,56 @@ class Renderer:
         # Handle Procedural Wall Texture
         wall_mask = tiles_slice == 1
         if np.any(wall_mask):
-            # Original solid wall style
             fg_colors[wall_mask] = [80, 80, 90]
             bg_colors[wall_mask] = [20, 20, 25]
             chars[wall_mask] = "██"
 
-        # Handle Visibility/Exploration
+        # --- Vignette & Lighting (Atmosphere) ---
+        px, py = cam_x + render_w // 2, cam_y + render_h // 2
+        dist_sq = (xx - px) ** 2 + (yy - py) ** 2
+        
         if game_map.is_dark:
-            yy, xx = np.ogrid[cam_y:y_end, cam_x:x_end]
-            px, py = cam_x + render_w // 2, cam_y + render_h // 2
-            dist_sq = (xx - px) ** 2 + (yy - py) ** 2
-            light_radius = 12
+            # Enhanced Ray-Tracing Style Lighting
+            # Dynamic torch flicker
+            flicker = 1.0 + (np.sin(current_time * 10.0) * 0.05 * np.cos(current_time * 7.0))
+            light_radius = 12.0 * flicker
             max_dist_sq = light_radius**2
-            light_level = np.clip(1.0 - (dist_sq / max_dist_sq), 0.2, 1.0) ** 1.5
+            
+            # Smooth cubic falloff for more "ray-traced" look
+            light_level = np.clip(1.0 - (dist_sq / max_dist_sq), 0.0, 1.0) ** 2.0
+            # Ambient light level (minimum visibility)
+            light_level = np.maximum(light_level, 0.1)
+            
+            # Apply light to foreground
             fg_colors[:, :, 0] = (fg_colors[:, :, 0] * light_level).astype(np.int16)
             fg_colors[:, :, 1] = (fg_colors[:, :, 1] * light_level).astype(np.int16)
             fg_colors[:, :, 2] = (fg_colors[:, :, 2] * light_level).astype(np.int16)
-            bg_mask = bg_colors[:, :, 0] != -1
-            bg_colors[bg_mask, 0] = (
-                bg_colors[bg_mask, 0] * light_level[bg_mask]
-            ).astype(np.int16)
-            bg_colors[bg_mask, 1] = (
-                bg_colors[bg_mask, 1] * light_level[bg_mask]
-            ).astype(np.int16)
-            bg_colors[bg_mask, 2] = (
-                bg_colors[bg_mask, 2] * light_level[bg_mask]
-            ).astype(np.int16)
+            
+            # Apply light to background
+            bg_valid = bg_colors[:, :, 0] != -1
+            if np.any(bg_valid):
+                bg_colors[bg_valid, 0] = (bg_colors[bg_valid, 0] * light_level[bg_valid]).astype(np.int16)
+                bg_colors[bg_valid, 1] = (bg_colors[bg_valid, 1] * light_level[bg_valid]).astype(np.int16)
+                bg_colors[bg_valid, 2] = (bg_colors[bg_valid, 2] * light_level[bg_valid]).astype(np.int16)
 
+            # Handle FOV exploration dimming
             not_visible = ~visible_slice
             if np.any(not_visible):
                 explored_slice = game_map.explored[cam_y:y_end, cam_x:x_end]
                 dim_mask = not_visible & explored_slice
                 if np.any(dim_mask):
-                    fg_colors[dim_mask] = np.maximum(0, fg_colors[dim_mask] - 100)
+                    # Explore memory is much darker
+                    fg_colors[dim_mask] = (fg_colors[dim_mask] * 0.3).astype(np.int16)
+                    bg_colors[dim_mask] = (bg_colors[dim_mask] * 0.3).astype(np.int16)
+                
                 hide_mask = not_visible & ~explored_slice
                 if np.any(hide_mask):
                     chars[hide_mask] = "  "
                     fg_colors[hide_mask] = 0
                     bg_colors[hide_mask] = -1
+        else:
+            # Overworld: No vignette, full visibility
+            pass
 
         # Assign to buffers
         by_end = buffer_y_offset + slice_h
@@ -991,6 +1069,84 @@ class Renderer:
             if bx < buffer_w:
                 buffer[by, bx] = char
                 self.fg_color_buffer[by, bx] = (150, 150, 150)
+
+
+    def _render_particles(self, buffer, cam_x, cam_y, game_map, offset_x, offset_y):
+        """Overlay biome-specific ambient particles."""
+        import time
+        
+        current_time = time.time()
+        render_w = self.map_render_width
+        render_h = self.map_render_height
+        
+        # Center point for biome lookup
+        cx, cy = cam_x + render_w // 2, cam_y + render_h // 2
+        if not (0 <= cx < game_map.width and 0 <= cy < game_map.height):
+            return
+            
+        # Biome map is needed for particles
+        if not hasattr(game_map, 'biome_map') or game_map.biome_map is None:
+            return
+            
+        biome = game_map.biome_map[cy, cx]
+        
+        # Determine particle type
+        p_char = None
+        p_color = (255, 255, 255)
+        p_count = 0
+        p_motion = (0, 0) # dx, dy per second
+        
+        if biome == "forest" or biome == "dense_forest" or biome == "jungle":
+            p_char = ". "
+            p_color = (150, 255, 150)
+            p_count = 12
+            p_motion = (0.5, 0.2)
+        elif biome == "snow":
+            p_char = "* "
+            p_color = (255, 255, 255)
+            p_count = 20
+            p_motion = (2.0, 1.0)
+        elif biome == "volcanic":
+            p_char = ". "
+            p_color = (255, 100, 50)
+            p_count = 15
+            p_motion = (-0.5, -1.5)
+        elif biome == "swamp":
+            p_char = "o "
+            p_color = (100, 150, 100)
+            p_count = 8
+            p_motion = (0.1, -0.5)
+        elif biome == "desert" or biome == "oasis_desert":
+            p_char = ". "
+            p_color = (235, 215, 165)
+            p_count = 10
+            p_motion = (1.5, 0.1)
+        elif biome == "mountain" or biome == "hill":
+            p_char = ". "
+            p_color = (200, 200, 200)
+            p_count = 6
+            p_motion = (0.2, 0.8)
+        elif biome == "ocean":
+            p_char = "~ "
+            p_color = (150, 200, 255)
+            p_count = 5
+            p_motion = (0.3, 0.3)
+            
+        if p_char and p_count > 0:
+            for i in range(p_count):
+                seed = i * 13.37
+                phase_x = (seed + current_time * p_motion[0]) % render_w
+                phase_y = (seed * 0.7 + current_time * p_motion[1]) % render_h
+                
+                bx = offset_x + 1 + int(phase_x)
+                by = offset_y + 1 + int(phase_y)
+                
+                if 0 <= bx < self.screen_width // 2 and 0 <= by < self.screen_height:
+                    mx, my = cam_x + int(phase_x), cam_y + int(phase_y)
+                    if 0 <= mx < game_map.width and 0 <= my < game_map.height:
+                        if game_map.visible[my, mx]:
+                            buffer[by, bx] = p_char
+                            self.fg_color_buffer[by, bx] = p_color
 
     def _render_inventory(
         self,

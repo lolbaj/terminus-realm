@@ -26,6 +26,13 @@ class EditorMode(Enum):
     ERASE = "ERASE"
 
 
+class SymmetryMode(Enum):
+    NONE = "NONE"
+    HORIZONTAL = "HORIZ"
+    VERTICAL = "VERT"
+    QUAD = "QUAD"
+
+
 @dataclass
 class Selection:
     x: int

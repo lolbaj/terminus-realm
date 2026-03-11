@@ -20,6 +20,12 @@ from world.map import (
     TILE_CACTUS,
     TILE_ICE,
     TILE_DOOR,
+    TILE_FLOWER_BLUE,
+    TILE_FLOWER_WHITE,
+    TILE_MUSHROOM,
+    TILE_ROCK_SMALL,
+    TILE_BUSH,
+    TILE_WALL_RUINED,
 )
 from world.static_maps import STATIC_CHUNKS
 
@@ -385,15 +391,21 @@ def generate_biome_chunk(
     world_cy = chunk_y * chunk_size + chunk_size // 2
     distance = (world_cx**2 + world_cy**2) ** 0.5
 
-    # Determine Biome
+    # Determine Biome with noise-based variation
+    # Actually, let's use the chunk coordinates as a seed for biome noise
+    random.seed(seed if seed is not None else 0)
+    b_noise = random.random() * 20.0 - 10.0 # -10 to 10 variation
+    
+    adj_dist = distance + b_noise
+
     biome = "forest"
-    if distance < 60:
+    if adj_dist < 60:
         biome = "town"
-    elif distance < 250:
+    elif adj_dist < 250:
         biome = "forest"
-    elif distance < 450:
+    elif adj_dist < 450:
         biome = "desert"
-    elif distance < 650:
+    elif adj_dist < 650:
         biome = "snow"
     else:
         biome = "volcanic"
@@ -409,45 +421,87 @@ def generate_biome_chunk(
             noise_val = noise_map[y, x]
 
             if biome == "town":
-                if noise_val > 0.7:
+                if noise_val > 0.75:
                     game_map.tiles[y, x] = TILE_WALL
-                elif noise_val < 0.2:
+                elif noise_val < 0.15:
                     game_map.tiles[y, x] = TILE_GRASS
+                elif noise_val < 0.18:
+                    game_map.tiles[y, x] = TILE_FLOWER_WHITE
                 else:
                     game_map.tiles[y, x] = TILE_PAVEMENT
 
             elif biome == "forest":
-                if noise_val < 0.25:
+                if noise_val < 0.20:
                     game_map.tiles[y, x] = TILE_WATER
-                elif noise_val > 0.65:
+                elif noise_val > 0.75:
                     game_map.tiles[y, x] = TILE_TREE
+                elif noise_val > 0.72:
+                    game_map.tiles[y, x] = TILE_BUSH
+                elif noise_val > 0.70:
+                    game_map.tiles[y, x] = TILE_MUSHROOM
+                elif noise_val > 0.68:
+                    game_map.tiles[y, x] = TILE_FLOWER_BLUE
                 else:
                     game_map.tiles[y, x] = TILE_GRASS
 
             elif biome == "desert":
-                if noise_val < 0.1:
+                if noise_val < 0.08:
                     game_map.tiles[y, x] = TILE_WATER
-                elif noise_val > 0.8:
+                elif noise_val > 0.85:
                     game_map.tiles[y, x] = TILE_WALL
-                elif noise_val > 0.7:
+                elif noise_val > 0.75:
                     game_map.tiles[y, x] = TILE_CACTUS
+                elif noise_val > 0.72:
+                    game_map.tiles[y, x] = TILE_ROCK_SMALL
                 else:
                     game_map.tiles[y, x] = TILE_SAND
 
             elif biome == "snow":
-                if noise_val < 0.3:
+                if noise_val < 0.25:
                     game_map.tiles[y, x] = TILE_ICE
-                elif noise_val > 0.7:
+                elif noise_val > 0.80:
                     game_map.tiles[y, x] = TILE_TREE
+                elif noise_val > 0.78:
+                    game_map.tiles[y, x] = TILE_ROCK_SMALL
                 else:
                     game_map.tiles[y, x] = TILE_SNOW
 
             elif biome == "volcanic":
-                if noise_val < 0.3:
+                if noise_val < 0.25:
                     game_map.tiles[y, x] = TILE_LAVA
-                elif noise_val > 0.6:
+                elif noise_val > 0.75:
                     game_map.tiles[y, x] = TILE_WALL
+                elif noise_val > 0.70:
+                    game_map.tiles[y, x] = TILE_WALL_RUINED
+                elif noise_val > 0.65:
+                    game_map.tiles[y, x] = TILE_ROCK_SMALL
                 else:
                     game_map.tiles[y, x] = TILE_ASH
+
+    # --- Feature Placement (Post-processing) ---
+    # Add a small chance for a "POI" (Point of Interest)
+    random.seed(seed + chunk_x * 7 + chunk_y * 13)
+    if random.random() < 0.15:
+        # Pick a random spot for a POI
+        px = random.randint(5, chunk_size - 6)
+        py = random.randint(5, chunk_size - 6)
+        
+        poi_type = random.choice(["pond", "ruin", "grove"])
+        
+        if poi_type == "pond":
+            for dy in range(-2, 3):
+                for dx in range(-2, 3):
+                    if dx*dx + dy*dy <= 5:
+                        game_map.tiles[py+dy, px+dx] = TILE_WATER
+        elif poi_type == "ruin":
+            for dy in range(-2, 3):
+                for dx in range(-2, 3):
+                    if random.random() < 0.4:
+                        game_map.tiles[py+dy, px+dx] = TILE_WALL_RUINED
+        elif poi_type == "grove":
+            for dy in range(-2, 3):
+                for dx in range(-2, 3):
+                    if random.random() < 0.5:
+                        game_map.tiles[py+dy, px+dx] = TILE_TREE
 
     return game_map

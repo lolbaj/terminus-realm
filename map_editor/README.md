@@ -57,6 +57,7 @@ python map_editor/editor.py -s
 |-----|--------|
 | `Space` | Paint current tile |
 | `p` | Toggle continuous Paint Mode |
+| `y` | Cycle Symmetry Mode (None, Horiz, Vert, Quad) |
 | `b` | Start/end Rectangle tool |
 | `+` / `-` | Increase/decrease brush size |
 | `f` | Flood fill |

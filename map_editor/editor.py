@@ -14,7 +14,7 @@ import shutil
 # Add project root to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from map_editor.models import EditorMode
+from map_editor.models import EditorMode, SymmetryMode
 from map_editor.palette import TILE_PALETTE, CATEGORIES, get_category_layout
 from map_editor.renderer import Renderer
 from map_editor.map_manager import MapManager
@@ -55,6 +55,8 @@ class MapEditor:
         self.show_help = False
         self.simple_mode = False
         self.show_prefabs = False
+        self.show_minimap = True
+        self.symmetry_mode = SymmetryMode.NONE
         self.browser_idx = 0
         self.layer_visibility = "both"  # "both", "bg", "fg"
         self.zoom_level = 2  # 1: Zoom Out (1 char), 2: Normal (2 chars)
@@ -327,8 +329,9 @@ class MapEditor:
 
         # Right: Tool Info
         auto_str = "[AUTO]" if self.map_mgr.auto_tiling else ""
+        sym_str = f" SYM:{self.symmetry_mode.value}" if self.symmetry_mode != SymmetryMode.NONE else ""
         tool_info = (
-            f" {self.mode.name} | Z:{self.zoom_level} | B:{self.brush_size} {auto_str} "
+            f" {self.mode.name} | Z:{self.zoom_level} | B:{self.brush_size}{sym_str} {auto_str} "
         )
         tx = max_cells - (len(tool_info) // self.renderer.cell_width) - 1
         if tx > max_cells // 2:  # Only draw if it doesn't overlap too much
@@ -340,8 +343,40 @@ class MapEditor:
             self._render_help()
         if self.show_prefabs:
             self._render_prefabs()
+        if self.show_minimap:
+            self._render_minimap()
         if self.mode == EditorMode.BROWSE:
             self._render_map_browser()
+
+    def _render_minimap(self):
+        mw, mh = 20, 10
+        # Position in bottom right of viewport
+        sx = self.start_x + self.viewport_width - mw - 1
+        sy = self.viewport_height - mh
+        
+        # Border for minimap
+        self.renderer.draw_box(sx, sy, mw + 2, mh + 2, (80, 80, 80))
+        
+        for y in range(mh):
+            for x in range(mw):
+                # Scale coordinates
+                mx = int(x / mw * self.map_mgr.width)
+                my = int(y / mh * self.map_mgr.height)
+                
+                char_code = self.map_mgr.get_tile(mx, my, "bg")
+                fg_char = self.map_mgr.get_tile(mx, my, "fg")
+                code = fg_char if fg_char != " " else char_code
+                tile = TILE_PALETTE.get(code, TILE_PALETTE["."])
+                
+                # Check if this part of the map is in current viewport
+                is_in_view = (
+                    self.camera_x <= mx < self.camera_x + self.viewport_width and
+                    self.camera_y <= my < self.camera_y + self.viewport_height
+                )
+                
+                bg = (80, 80, 100) if is_in_view else tile.bg_color
+                # Use a small character for minimap
+                self.renderer.set_cell(sx + 1 + x, sy + 1 + y, "· ", tile.fg_color, bg)
 
     def _render_help(self):
         # Background

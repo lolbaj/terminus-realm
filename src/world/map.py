@@ -18,6 +18,13 @@ TILE_LAVA = 11
 TILE_ASH = 12
 TILE_CACTUS = 13
 TILE_ICE = 14
+TILE_FLOWER_RED = 15
+TILE_FLOWER_BLUE = 16
+TILE_FLOWER_WHITE = 17
+TILE_MUSHROOM = 18
+TILE_ROCK_SMALL = 19
+TILE_BUSH = 20
+TILE_WALL_RUINED = 21
 
 # Centralized character mapping for loading maps from text
 CHAR_MAP = {
@@ -37,6 +44,13 @@ CHAR_MAP = {
     "A": TILE_ASH,
     "C": TILE_CACTUS,
     "I": TILE_ICE,
+    "f": TILE_FLOWER_RED,
+    "F": TILE_FLOWER_BLUE,
+    "W": TILE_FLOWER_WHITE,
+    "M": TILE_MUSHROOM,
+    "R": TILE_ROCK_SMALL,
+    "B": TILE_BUSH,
+    "%": TILE_WALL_RUINED,
     # Box drawing walls
     "║": TILE_WALL,
     "═": TILE_WALL,
@@ -86,10 +100,12 @@ class GameMap:
         explored: Optional[np.ndarray] = None,
         visible: Optional[np.ndarray] = None,
         is_dark: bool = False,
+        biome_map: Optional[np.ndarray] = None,
     ):
         self.width = width
         self.height = height
         self.is_dark = is_dark
+        self.biome_map = biome_map
         # Use numpy array for efficient storage and operations
         if tiles is not None:
             self.tiles = tiles

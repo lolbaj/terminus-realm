@@ -100,6 +100,12 @@ class GameEngine:
         if self.player_id is None or self.game_map is None:
             return
 
+        # If the map is not dark, everything is visible and explored
+        if not self.game_map.is_dark:
+            self.game_map.visible.fill(True)
+            self.game_map.explored.fill(True)
+            return
+
         pos = self.entity_manager.get_component(self.player_id, Position)
         if pos:
             # Check if player has moved
